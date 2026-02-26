@@ -13,6 +13,9 @@ const mongoose = require('mongoose')
     mongoose.connection.on("error", (err) => {
         console.log("Erro:", err)
     })
+    // importando cors
+const cors = require('cors')
+app.use(cors())
 
 //Middleweres
 app.use(express.json())
