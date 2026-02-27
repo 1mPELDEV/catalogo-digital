@@ -12,11 +12,11 @@ const Produtos = new Schema ({
         },
         descricao:{
             type: String,
-            required : true
+            required : false
         },
         imagem :{
             type: String,
-            required: true
+            required: false
         },
         data:{
             type: Date,

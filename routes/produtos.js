@@ -8,11 +8,19 @@ const Produto = require('../models/Produto')
     //C
 router.post('/', async (req,res)=>{
     try{
-    const novoProduto = new Produto(req.body)
-   await novoProduto.save()
-    res.status(201).json(novoProduto)
-    } catch(err){
-        res.status(500).json({erro : "Erro ao criar produto"})
+        console.log("BODY:" , req.body)
+
+        const novoProduto = new Produto({
+            nome: req.body.nome,
+            preco: req.body.preco
+        })
+        await novoProduto.save()
+
+        res.status(201).json(novoProduto)
+
+    }catch(err){
+        console.log("ERRO REAL:" , err)
+        res.status(500).json({erro: err.message})
     }
 })
     //R
