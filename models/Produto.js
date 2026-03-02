@@ -4,11 +4,13 @@ const Schema = mongoose.Schema
 const Produtos = new Schema ({
         nome:{
             type: String,
-            required : true
+            required :[true, "O nome é obrigatorio"],
+            trim: true
         },
         preco:{
-            type: String,
-            required: true
+            type: Number,
+            required: [true, "O preço é obrigatório"],
+            min: [0, "O preço deve ser maior que 0"]
         },
         descricao:{
             type: String,

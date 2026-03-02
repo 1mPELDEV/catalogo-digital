@@ -20,7 +20,12 @@ router.post('/', async (req,res)=>{
 
     }catch(err){
         console.log("ERRO REAL:" , err)
-        res.status(500).json({erro: err.message})
+
+        if(err.name === "ValidationError"){
+            const mensagens = Object.values(err.errors).map(e => e.message)
+            return res.status(400).json({erros:mensagens})
+        }
+        res.status(500).json({erro: "Erro interno do servidor"})
     }
 })
     //R
@@ -35,10 +40,10 @@ router.get('/', async (req, res) => {
     //U
 router.put('/:id' , async(req,res) =>{
     try{
-        await Produto.findByIdAndUpdate(req.params.id, req.body)
-        res.send("Produto atualizado")
+        const produtoAtualizado = await Produto.findByIdAndUpdate(req.params.id, req.body,{new: true})
+        res.json(produtoAtualizado)
     } catch(err){  
-        res.status(500).json({erro : "Erro ao atualizar produto"})
+        res.status(500).json({erro : "Erro ao atualizar produto" + err})
     }
 })
     //D
