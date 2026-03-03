@@ -15,7 +15,9 @@ const mongoose = require('mongoose')
     })
     // importando cors
 const cors = require('cors')
-app.use(cors())
+app.use(cors({
+  origin: "http://localhost:5173"
+}))
 
 //Middleweres
 app.use(express.json())
@@ -27,9 +29,6 @@ app.use("/produtos", produtos)
 app.get('/',(req,res)=>{
     res.send("Rota principal funcionando")
 })
-
-
-
 
 
 
