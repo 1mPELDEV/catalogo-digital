@@ -14,6 +14,7 @@ Este projeto foi desenvolvido com foco em tecnicas de backend utilizando Node.js
 * Mongoose
 * REST API
 * JSON
+* React-toastify
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
