@@ -8,8 +8,6 @@ const Produto = require('../models/Produto')
     //C
 router.post('/', async (req,res)=>{
     try{
-        console.log("BODY:" , req.body)
-
         const novoProduto = new Produto({
             nome: req.body.nome,
             preco: req.body.preco

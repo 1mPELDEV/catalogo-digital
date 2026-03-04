@@ -10,14 +10,21 @@ const [produtos, setProdutos] = useState([])
 const [nome, setNome] = useState('')
 const [preco, setPreco] = useState('')
 const [editandoId , setEditandoId] = useState(null)
+const [loading, setLoading] = useState(false)
 
 const buscarProdutos = async () =>{
   try {
+    setLoading(true) 
+
     const res = await axios.get('http://localhost:8082/produtos')
     setProdutos(res.data)
     return res.data
+
   } catch (err){
     console.log(err)
+    toast.error("Erro ao buscar produto")
+  } finally{
+    setLoading(false)
   }
 }
  
@@ -121,8 +128,14 @@ const atualizarProduto = ( id => {
       {preco}
 
       <h2>Lista de Produtos</h2>
-
-      {produtos.map(produto => (
+      {loading && <p>🔄 Carregando produtos...</p>}
+      
+      {!loading && produtos.length === 0 && (
+        <p style={{ opacity: 0.6 }}>
+          📦 Nenhum produto cadastrado ainda.
+        </p>
+      )}
+      {!loading && produtos.map(produto => (
         <div className='card' key={produto._id}>
           <h3>{produto.nome}</h3>
           <p>R$ {produto.preco}</p>
