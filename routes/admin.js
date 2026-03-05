@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt")
-const Produto = require('../models/Produto')
+const Admin  = require('../models/admin')
 
 router.post('/login' , async (req,res) => {
     try{
@@ -24,26 +24,5 @@ router.post('/login' , async (req,res) => {
         res.status(500).json({erro :"Erro no servidor"})
     }
 })
-
-module.exports = router
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = router
