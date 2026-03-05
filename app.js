@@ -25,12 +25,14 @@ app.use(express.json())
 //Rotas
 const produtos = require('./routes/produtos')
 app.use("/produtos", produtos)
+
+const admin = require('./routes/admin')
+app.use("/admin", admin)
+
     //Rota principal
 app.get('/',(req,res)=>{
     res.send("Rota principal funcionando")
 })
-
-
 
 
 
