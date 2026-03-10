@@ -1,4 +1,5 @@
-import { useEffect , useState } from 'react'
+import { useEffect , useState} from 'react'
+import { useNavigate } from 'react-router-dom'
 // importanto axios 
 import axios from "axios"
 // importanto toastify
@@ -12,12 +13,24 @@ const [nome, setNome] = useState('')
 const [preco, setPreco] = useState('')
 const [editandoId , setEditandoId] = useState(null)
 const [loading, setLoading] = useState(false)
+const navigate = useNavigate()
+const token = localStorage.getItem("token")
+
+ // verifica o token
+useEffect(() => {
+  const token = localStorage.getItem("token")
+  if(!token){
+    navigate("/") 
+  }
+}, [])
 
 const buscarProdutos = async () =>{
   try {
     setLoading(true) 
 
-    const res = await axios.get('http://localhost:8082/produtos')
+    const res = await axios.get('http://localhost:8082/produtos', {
+      headers : {Authorization : `Bearer ${token}`}
+    })
     setProdutos(res.data)
     return res.data
 
@@ -54,7 +67,9 @@ const criarProduto = () =>{
     return
   }
 
-  axios.post('http://localhost:8082/produtos', { nome, preco: Number(preco)}).then(()=>{
+  axios.post('http://localhost:8082/produtos', {
+     nome, preco: Number(preco)},
+    {headers : {Authorization: `Bearer ${token}`}}).then(()=>{
     setNome('')
     setPreco('')
     toast.success("Criado com sucesso!")
@@ -71,7 +86,9 @@ const deletarProduto = async (produto) => {
   if(!confirmar) return
 
   try{
-    await axios.delete(`http://localhost:8082/produtos/${produto._id}`)
+    await axios.delete(`http://localhost:8082/produtos/${produto._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    })
 
     toast.success("Produto deletado com sucesso!")
     await buscarProdutos()
@@ -96,8 +113,10 @@ const atualizarProduto = ( id => {
   
   axios.put(`http://localhost:8082/produtos/${id}`,{
     nome,
-    preco : Number(preco)
-  }).then(()=>{
+    preco : Number(preco)},{
+       headers: { Authorization: `Bearer ${token}`}
+    }
+  ).then(()=>{
     setNome('')
     setPreco('')
     setEditandoId(null)

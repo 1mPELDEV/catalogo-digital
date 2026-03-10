@@ -2,11 +2,13 @@ const express = require('express')
 const router = express.Router()
 const mongoose = require('mongoose')
 const Produto = require('../models/Produto')
+// verificação de token
+const verificaToken = require('../middlewares/auth') 
 
 //CRUD
 
     //C
-router.post('/', async (req,res)=>{
+router.post('/', verificaToken, async (req,res)=>{
     try{
         const novoProduto = new Produto({
             nome: req.body.nome,
@@ -27,7 +29,7 @@ router.post('/', async (req,res)=>{
     }
 })
     //R
-router.get('/', async (req, res) => {
+router.get('/', verificaToken , async (req, res) => {
     try {
         const produtos = await Produto.find()
         res.json(produtos)
@@ -36,7 +38,7 @@ router.get('/', async (req, res) => {
     }
 })
     //U
-router.put('/:id' , async(req,res) =>{
+router.put('/:id' , verificaToken , async(req,res) =>{
     try{
         const produtoAtualizado = await Produto.findByIdAndUpdate(req.params.id, req.body,{new: true})
         res.json(produtoAtualizado)
@@ -45,7 +47,7 @@ router.put('/:id' , async(req,res) =>{
     }
 })
     //D
-router.delete('/:id', async(req,res) =>{
+router.delete('/:id', verificaToken , async(req,res) =>{
     try{
         await Produto.findByIdAndDelete(req.params.id)
         res.send("Produto deletado")

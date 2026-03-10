@@ -14,6 +14,12 @@ router.post('/login' , async (req,res) => {
             return res.status(401).json({erro : "Credenciais inválidas"})
         }
 
+        const senhaCorreta = await bcrypt.compare(senha, admin.senha)
+
+        if(!senhaCorreta){
+            return res.status(401).json({erro : "Senha incorreta"})
+        }
+
         const token = jwt.sign(
             {id: admin._id},
             "SEGREDO_SUPER_FORTE",

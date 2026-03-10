@@ -1,7 +1,6 @@
 
 const mongoose = require("mongoose")
 const bcrypt = require("bcrypt")
-const Admin = require("./Admin.js")
 
 mongoose.connect("mongodb://localhost/db-catalogo")
 

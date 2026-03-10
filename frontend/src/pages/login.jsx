@@ -1,15 +1,21 @@
 import { useState } from "react";
-import axios, { formToJSON } from "axios"
+import axios  from "axios"
+import { useNavigate } from "react-router-dom";
 
-function login(){
+
+
+function Login(){
+    //useState
     const [email,setEmail] = useState('')
     const [senha,setSenha] = useState('')
+    //useNavigate
+    const navigate = useNavigate()
 
     async function fazerLogin(e) { 
         e.preventDefault()
 
         try{
-            const response = await axios.post("http://localhost/8082/login" , {
+            const response = await axios.post("http://localhost:8082/admin/login" , {
                 email,
                 senha
             })
@@ -17,9 +23,11 @@ function login(){
             const token = response.data.token
 
             localStorage.setItem("token", token)
+            navigate("/admin")
 
             alert("Login feito com sucesso!")
         } catch(err) {
+            console.log(err.response?.data)
             alert("Erro no login")
         }
     }
@@ -30,7 +38,7 @@ function login(){
                    value={email}
                    onChange={(e)=> setEmail(e.target.value)}
             />
-            <input type="senha"
+            <input type="password"
                    placeholder="senha"
                    value={senha}
                    onChange={(e)=> setSenha(e.target.value)}
@@ -41,4 +49,4 @@ function login(){
 }
 
 
-export default login
+export default Login
