@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken")
 
 const verificaToken = (req,res,next) =>{
-    const authHeader = req.header.authorization;
+    const authHeader = req.headers.authorization;
 
     if(!authHeader) {
         return res.status(401).json({erro : "Token não fornecido"})
@@ -18,4 +18,4 @@ const verificaToken = (req,res,next) =>{
     }
 }
 
-module.expors = verificaToken
+module.exports = { verificaToken }

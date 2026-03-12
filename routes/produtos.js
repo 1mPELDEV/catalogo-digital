@@ -3,12 +3,14 @@ const router = express.Router()
 const mongoose = require('mongoose')
 const Produto = require('../models/Produto')
 // verificação de token
-const verificaToken = require('../middlewares/auth') 
+const { verificaToken } = require('../middlewares/authMiddleware') 
 
 //CRUD
 
+console.log("tipo verificaToken:", typeof verificaToken)
+
     //C
-router.post('/', verificaToken, async (req,res)=>{
+router.post('/', verificaToken , async (req,res)=>{
     try{
         const novoProduto = new Produto({
             nome: req.body.nome,
@@ -29,7 +31,7 @@ router.post('/', verificaToken, async (req,res)=>{
     }
 })
     //R
-router.get('/', verificaToken , async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const produtos = await Produto.find()
         res.json(produtos)

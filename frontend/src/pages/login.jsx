@@ -23,6 +23,7 @@ function Login(){
             const token = response.data.token
 
             localStorage.setItem("token", token)
+            window.dispatchEvent(new Event("storage"))
             navigate("/admin")
 
             alert("Login feito com sucesso!")
