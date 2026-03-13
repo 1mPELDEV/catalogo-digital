@@ -6,7 +6,7 @@ function Pedido(){
 
   useEffect(()=>{
 
-    const carrinhoSalvo = JSON.parse(localStorage.getItem("lista"))
+    const carrinhoSalvo = JSON.parse(localStorage.getItem("lista")) || []
 
     if(carrinhoSalvo){
       setLista(carrinhoSalvo)
@@ -14,7 +14,23 @@ function Pedido(){
 
   },[])
 
-  const quantidade = lista.filter(item => item._id === produto._id).length
+  const itensAgrupados = Object.values(
+    lista.reduce((acc,produto) =>{
+      if(!acc[produto._id]){
+        acc[produto._id] = { ...produto, quantidade: 0 }
+      }
+
+      acc[produto._id].quantidade++
+      
+      return acc
+
+    }, {})
+  )
+
+  const total = itensAgrupados.reduce((acc, item) => {
+  return acc + item.preco * item.quantidade
+}, 0)
+
 
   return(
     <>
@@ -23,12 +39,21 @@ function Pedido(){
     {lista.length === 0 && (
     <p>Nenhum item no pedido ainda</p>
     )}
+    
+    {itensAgrupados.map(item => (
 
-    {lista.map(item =>(
-    <div key={item._id}>
+      <div key={item._id} style={{border:"1px solid #ccc", margin:"10px", padding:"10px"}}>
+
         <h3>{item.nome}</h3>
-        <p>R$ {item.preco}</p>
-    </div>
+
+        <p>Preço: R$ {item.preco}</p>
+
+        <p>Quantidade: {item.quantidade}</p>
+
+        <p>Subtotal: R$ {item.preco * item.quantidade}</p>
+
+      </div>
+
     ))}
 
     </>

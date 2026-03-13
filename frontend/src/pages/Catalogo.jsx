@@ -34,6 +34,7 @@ function Catalogo () {
     toast.success("Produto adicionado ao pedido!")
     console.log("Carrinho:", novaLista)
     localStorage.setItem("lista", JSON.stringify(novaLista))
+    window.dispatchEvent(new Event("storage"))
   }
 
   return (
