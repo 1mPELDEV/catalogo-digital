@@ -16,13 +16,14 @@ const Produtos = new Schema ({
             type: String,
             required : false
         },
-        imagem :{
-            type: String,
-            required: false
+        imagem: {
+        type: String,
+        trim: true,
+        default: "https://via.placeholder.com/120"
         },
         data:{
             type: Date,
-            default: Date.now()
+            default: Date.now
         }
         
 })

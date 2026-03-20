@@ -11,6 +11,8 @@ function Admin() {
 const [produtos, setProdutos] = useState([])
 const [nome, setNome] = useState('')
 const [preco, setPreco] = useState('')
+const [imagem, setImagem] = useState('')
+const [descricao, setDescricao] = useState('')
 const [editandoId , setEditandoId] = useState(null)
 const [loading, setLoading] = useState(false)
 const navigate = useNavigate()
@@ -68,9 +70,15 @@ const criarProduto = () =>{
   }
 
   axios.post('http://localhost:8082/produtos', {
-     nome, preco: Number(preco)},
+     nome,
+     preco: Number(preco),
+     descricao,
+     imagem
+    },
     {headers : {Authorization: `Bearer ${token}`}}).then(()=>{
     setNome('')
+    setDescricao('')
+    setImagem('')
     setPreco('')
     toast.success("Criado com sucesso!")
     buscarProdutos()
@@ -113,12 +121,15 @@ const atualizarProduto = ( id => {
   
   axios.put(`http://localhost:8082/produtos/${id}`,{
     nome,
-    preco : Number(preco)},{
-       headers: { Authorization: `Bearer ${token}`}
-    }
+    preco : Number(preco),
+    descricao,
+    imagem
+  },{ headers: { Authorization: `Bearer ${token}` }}
   ).then(()=>{
     setNome('')
     setPreco('')
+    setDescricao('')
+    setImagem('')
     setEditandoId(null)
     toast.success("Produto atualizado com sucesso!")
     buscarProdutos()
@@ -137,6 +148,12 @@ const atualizarProduto = ( id => {
       <h2>Cadastrar Produto</h2>
       <input type="text" placeholder='Nome' value={nome} onChange={(e) => setNome(e.target.value)} />
       <input type="number" placeholder='Preço' value={preco} onChange={(e) => setPreco(e.target.value)}/>
+      <input type="text" placeholder='Descrição' value={descricao} onChange={(e) => setDescricao(e.target.value)} />
+      <input type="text" placeholder='URL da imagem' value={imagem} onChange={(e)=> setImagem(e.target.value)} />
+      {imagem && (
+      <img src={imagem} style={{width:"100px"}} />
+      )}
+      
       <button onClick={()=>{
         if(editandoId){
           atualizarProduto(editandoId) 
@@ -163,6 +180,7 @@ const atualizarProduto = ( id => {
           <button onClick={() =>{
             setNome(produto.nome)
             setPreco(produto.preco)
+            setDescricao(produto.descricao)
             setEditandoId(produto._id)
           }}>Editar</button>
         </div>

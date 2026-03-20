@@ -14,7 +14,9 @@ router.post('/', verificaToken , async (req,res)=>{
     try{
         const novoProduto = new Produto({
             nome: req.body.nome,
-            preco: req.body.preco
+            preco: req.body.preco,
+            descricao: req.body.descricao,
+            imagem: req.body.imagem
         })
         await novoProduto.save()
 

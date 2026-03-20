@@ -86,6 +86,14 @@ Este projeto tem como objetivo evoluir para uma plataforma onde pequenos comerci
 
 ---
 
+## refatorações
+
+ useCarrinho: criar um novo hook que tira a logica do pedido da page
+ CarrinhoContext: cria um estado global para a quantidade de itens no carrinho (remove os window.dispatchevent)
+ AuthContext: estado global para o login
+
+---
+
 ##  Autor
 
 Pedro Felipe Desenvolvedor Full Stack
