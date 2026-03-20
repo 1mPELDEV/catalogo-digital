@@ -13,11 +13,9 @@ function Pedido(){
     }
 
   },[])
-  const tensAgrupados = useMemo(() => {
-    
-  })
-  const itensAgrupados = Object.values(
-    lista.reduce((acc,produto) =>{
+const itensAgrupados = useMemo(() => {
+  return Object.values(
+    lista.reduce((acc, produto) => {
       if(!acc[produto._id]){
         acc[produto._id] = { ...produto, quantidade: 0 }
       }
@@ -25,9 +23,10 @@ function Pedido(){
       acc[produto._id].quantidade++
       
       return acc
-
     }, {})
   )
+}, [lista])
+
   const total = itensAgrupados.reduce((acc, item) => {
   return acc + item.preco * item.quantidade
 }, 0)
