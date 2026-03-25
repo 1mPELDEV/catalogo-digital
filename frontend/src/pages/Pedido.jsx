@@ -1,11 +1,13 @@
 import { useEffect, useState, useMemo } from "react"
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 function Pedido(){
 
   const [lista, setLista] = useState([])
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [nomeCliente, setNomeCliente] = useState("")
- const [endereco, setEndereco] = useState("")
+  const [endereco, setEndereco] = useState("")
 
   useEffect(()=>{
 
@@ -80,17 +82,17 @@ const diminuir = (id) => {
 
   const finalizarPedido = () =>{
     if(lista.length === 0){
-      alert("Seu carrinho está vazio!")
+      toast.warning("Seu pedido está vazio!")
       return
     }
 
     if(!nomeCliente.trim()){
-      alert("Digite seu nome!")
+      toast.warning("Digite o seu nome!")
       return
     }
 
     if(!endereco.trim()){
-      alert("Digite seu endereço!")
+      toast.warning("Digite o seu endereço!")
       return
     }
 
@@ -113,6 +115,7 @@ const diminuir = (id) => {
 
     setMostrarFormulario(false)
     limparCarrinho()
+    toast.success("Pedido enviado!")
   } 
 
   const styles = {
@@ -144,6 +147,7 @@ const diminuir = (id) => {
 
   return(
     <>
+    <ToastContainer />
     <h1>Seu Pedido</h1>
     
     {lista.length === 0 && (
@@ -174,7 +178,7 @@ const diminuir = (id) => {
 
     <button onClick={() => {
       if(lista.length === 0){
-        alert("Seu carrinho está vazio!")
+        toast.warning("Nenhum ítem no pedido!")
         return
       }
       setMostrarFormulario(true)

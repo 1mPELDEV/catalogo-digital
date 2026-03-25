@@ -15,129 +15,153 @@ const [imagem, setImagem] = useState('')
 const [descricao, setDescricao] = useState('')
 const [editandoId , setEditandoId] = useState(null)
 const [loading, setLoading] = useState(false)
+const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false)
+const [produtoSelecionado, setProdutoSelecionado] = useState(null)
 const navigate = useNavigate()
 const token = localStorage.getItem("token")
 
  // verifica o token
-useEffect(() => {
-  const token = localStorage.getItem("token")
-  if(!token){
-    navigate("/") 
-  }
-}, [])
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    if(!token){
+      navigate("/") 
+    }
+  }, [])
 
-const buscarProdutos = async () =>{
-  try {
-    setLoading(true) 
+  const buscarProdutos = async () =>{
+    try {
+      setLoading(true) 
 
-    const res = await axios.get('http://localhost:8082/produtos', {
-      headers : {Authorization : `Bearer ${token}`}
-    })
-    setProdutos(res.data)
-    return res.data
+      const res = await axios.get('http://localhost:8082/produtos', {
+        headers : {Authorization : `Bearer ${token}`}
+      })
+      setProdutos(res.data)
+      return res.data
 
-  } catch (err){
-    console.log(err)
-    toast.error("Erro ao buscar produto")
-  } finally{
-    setLoading(false)
-  }
-}
- 
-useEffect(() => {
-  const carregar = async () => {
-    const dados = await buscarProdutos()
-
-    if (dados) {
-      toast.info(
-        `👋 Bem vindo(a)! Você tem ${dados.length} produtos cadastrados.`,
-        { autoClose: 4000 }
-      )
+    } catch (err){
+      console.log(err)
+      toast.error("Erro ao buscar produto")
+    } finally{
+      setLoading(false)
     }
   }
-  carregar()
-}, [])
-
-const criarProduto = () =>{
-  if(!nome.trim()){
-   toast.warning("O Nome não pode ficar vazio!")
-    return
-  }
-
-  if(!preco || preco <= 0 ){
-   toast.warning("O preço deve ser maior do que 0!")
-    return
-  }
-
-  axios.post('http://localhost:8082/produtos', {
-     nome,
-     preco: Number(preco),
-     descricao,
-     imagem
-    },
-    {headers : {Authorization: `Bearer ${token}`}}).then(()=>{
-    setNome('')
-    setDescricao('')
-    setImagem('')
-    setPreco('')
-    toast.success("Criado com sucesso!")
-    buscarProdutos()
-  }).catch((err) =>{
- toast.error("Erro ao criar produto")
-console.log(err)
-  })
-}
-
-const deletarProduto = async (produto) => {
-  const confirmar = window.confirm(`Tem certeza que deseja deletar o "${produto.nome}"? `)
-
-  if(!confirmar) return
-
-  try{
-    await axios.delete(`http://localhost:8082/produtos/${produto._id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-    })
-
-    toast.success("Produto deletado com sucesso!")
-    await buscarProdutos()
-  } catch (err) {
-    toast.error("Erro ao deletar produto")
-    console.log(err)
-  }
-
-}
-
-const atualizarProduto = ( id => {
-
-    if(!nome.trim()){
-   toast.warning("O Nome não pode ficar vazio!")
-    return
-  }
-
-  if(!preco || preco <= 0 ){
-   toast.warning("O preço deve ser maior do que 0!")
-    return
-  }
   
-  axios.put(`http://localhost:8082/produtos/${id}`,{
-    nome,
-    preco : Number(preco),
-    descricao,
-    imagem
-  },{ headers: { Authorization: `Bearer ${token}` }}
-  ).then(()=>{
-    setNome('')
-    setPreco('')
-    setDescricao('')
-    setImagem('')
-    setEditandoId(null)
-    toast.success("Produto atualizado com sucesso!")
-    buscarProdutos()
-  }).catch((err) => {
-    toast.error("Erro ao atualizar produto")
-    console.log(err)})
-})
+  useEffect(() => {
+    const carregar = async () => {
+      const dados = await buscarProdutos()
 
+      if (dados) {
+        toast.info(
+          `👋 Bem vindo(a)! Você tem ${dados.length} produtos cadastrados.`,
+          { autoClose: 4000 }
+        )
+      }
+    }
+    carregar()
+  }, [])
+
+  const criarProduto = () =>{
+    if(!nome.trim()){
+    toast.warning("O Nome não pode ficar vazio!")
+      return
+    }
+
+    if(!preco || preco <= 0 ){
+    toast.warning("O preço deve ser maior do que 0!")
+      return
+    }
+
+    axios.post('http://localhost:8082/produtos', {
+      nome,
+      preco: Number(preco),
+      descricao,
+      imagem
+      },
+      {headers : {Authorization: `Bearer ${token}`}}).then(()=>{
+      setNome('')
+      setDescricao('')
+      setImagem('')
+      setPreco('')
+      toast.success("Criado com sucesso!")
+      buscarProdutos()
+    }).catch((err) =>{
+  toast.error("Erro ao criar produto")
+  console.log(err)
+    })
+  }
+
+  const deletarProduto = async () => {
+
+    if(!produtoSelecionado) return
+
+    try{
+      await axios.delete(`http://localhost:8082/produtos/${produtoSelecionado._id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+      })
+
+      toast.success("Produto deletado com sucesso!")
+      setMostrarConfirmacao(false)
+      setProdutoSelecionado(null)
+      buscarProdutos()
+
+    } catch (err) {
+      toast.error("Erro ao deletar produto")
+      console.log(err)
+    }
+
+  }
+
+  const atualizarProduto = ( id => {
+
+      if(!nome.trim()){
+    toast.warning("O Nome não pode ficar vazio!")
+      return
+    }
+
+    if(!preco || preco <= 0 ){
+    toast.warning("O preço deve ser maior do que 0!")
+      return
+    }
+    
+    axios.put(`http://localhost:8082/produtos/${id}`,{
+      nome,
+      preco : Number(preco),
+      descricao,
+      imagem
+    },{ headers: { Authorization: `Bearer ${token}` }}
+    ).then(()=>{
+      setNome('')
+      setPreco('')
+      setDescricao('')
+      setImagem('')
+      setEditandoId(null)
+      toast.success("Produto atualizado com sucesso!")
+      buscarProdutos()
+    }).catch((err) => {
+      toast.error("Erro ao atualizar produto")
+      console.log(err)})
+  })
+  const styles = {
+  overlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000
+  },
+  modal: {
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "10px",
+    width: "300px",
+    textAlign: "center"
+  }
+}
 
   return (
     <>
@@ -176,7 +200,10 @@ const atualizarProduto = ( id => {
         <div className='card' key={produto._id}>
           <h3>{produto.nome}</h3>
           <p>R$ {produto.preco}</p>
-          <button onClick={() => {deletarProduto(produto)}}>Deletar</button>
+          <button onClick={() => {
+            setProdutoSelecionado(produto)
+            setMostrarConfirmacao(true)
+          }}>Deletar</button>
           <button onClick={() =>{
             setNome(produto.nome)
             setPreco(produto.preco)
@@ -186,7 +213,35 @@ const atualizarProduto = ( id => {
           }}>Editar</button>
         </div>
       ))}
-    </>
+        {mostrarConfirmacao && (
+    <div style={styles.overlay}>
+      <div style={styles.modal}>
+        
+        <h3>Tem certeza?</h3>
+        <p>
+          Deseja deletar o produto{" "}
+          <strong>{produtoSelecionado?.nome}</strong>?
+        </p>
+
+        <div style={{display:"flex", gap:"10px", marginTop:"15px"}}>
+
+          <button onClick={deletarProduto}>
+            Confirmar
+          </button>
+
+          <button onClick={() => {
+            setMostrarConfirmacao(false)
+            setProdutoSelecionado(null)
+          }}>
+            Cancelar
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  )}
+    </>    
   )
 }
 
