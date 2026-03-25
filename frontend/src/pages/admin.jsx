@@ -181,6 +181,7 @@ const atualizarProduto = ( id => {
             setNome(produto.nome)
             setPreco(produto.preco)
             setDescricao(produto.descricao)
+            setImagem(produto.imagem)
             setEditandoId(produto._id)
           }}>Editar</button>
         </div>

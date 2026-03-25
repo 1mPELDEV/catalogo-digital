@@ -19,7 +19,7 @@ const Produtos = new Schema ({
         imagem: {
         type: String,
         trim: true,
-        default: "https://via.placeholder.com/120"
+        default: "https://picsum.photos/200"
         },
         data:{
             type: Date,

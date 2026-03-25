@@ -47,7 +47,15 @@ function Catalogo () {
 
       return (
         <div className="card" key={produto._id}>
+            <img 
+              src={produto.imagem || "https://picsum.photos/200"} 
+              alt={produto.nome}
+              style={{width:"120px", height:"120px", objectFit:"cover"}}
+              onError={(e) => {
+              e.target.src = "https://picsum.photos/200"
+           }}/>
           <h3>{produto.nome}</h3>
+          <small>{produto.descricao}</small>
           <p>R$ {produto.preco}</p>
           <button onClick={() => addItem(produto)}>
             Adicionar produto

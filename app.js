@@ -6,7 +6,7 @@ const app = express()
 
     // importanto mongoose
 const mongoose = require('mongoose')
-    mongoose.connect("mongodb://localhost/db-catalogo")
+    mongoose.connect("mongodb://127.0.0.1:27017/db-catalogo")
     mongoose.connection.on("connected", () => {
         console.log("MongoDB conectado")
     })
