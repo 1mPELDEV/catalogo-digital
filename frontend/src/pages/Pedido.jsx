@@ -1,11 +1,18 @@
 import { useEffect, useState, useMemo } from "react"
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import ModalConfirmacao from '../components/modalConfirmacao'
+import formatarPreco from '../utils/formatarpreco'
 
 function Pedido(){
 
   const [lista, setLista] = useState([])
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
+  //modal
+  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false)
+  const [produtoSelecionado,setProdutoSelecionado] = useState("")
+  const [acaoConfirmacao, setAcaoConfirmacao] = useState(null)
+  
   const [nomeCliente, setNomeCliente] = useState("")
   const [endereco, setEndereco] = useState("")
 
@@ -55,12 +62,15 @@ useEffect(() => {
   setLista(novaLista)
   localStorage.setItem("lista", JSON.stringify(novaLista))
   window.dispatchEvent(new Event("storage"))
+  toast.success("Produto removido com sucesso!")
 }
+
 
 const limparCarrinho = () =>{
   setLista([])
   localStorage.removeItem("lista")
   window.dispatchEvent(new Event("storage"))
+  setMostrarConfirmacao(false)
 }
 
 const aumentar = (produto) => {
@@ -102,12 +112,12 @@ const diminuir = (id) => {
     mensagem += `📍 Endereço: ${endereco}\n\n`
 
     itensAgrupados.forEach(item => {
-      mensagem += `• ${item.nome} x${item.quantidade} - R$ ${item.preco * item.quantidade}\n`
+      mensagem += `• ${item.nome} x${item.quantidade} - R$ ${formatarPreco(item.preco * item.quantidade)}\n`
     })
 
-    mensagem += `\n💰 Total: R$ ${total}`
+    mensagem += `\n💰 Total: R$ ${formatarPreco(total)}`
 
-    const numero = "5574999798620"
+    const numero = "5574999105013"
 
     const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
 
@@ -144,6 +154,19 @@ const diminuir = (id) => {
     marginTop: "10px"
   }
 }
+ const confirmarAcao = () => {
+  if(acaoConfirmacao === "removerItem"){
+    removeItem(produtoSelecionado)
+  }
+
+  if(acaoConfirmacao === "limparCarrinho"){
+    limparCarrinho()
+  }
+
+  setMostrarConfirmacao(false)
+  setProdutoSelecionado(null)
+  setAcaoConfirmacao(null)
+}
 
   return(
     <>
@@ -160,21 +183,26 @@ const diminuir = (id) => {
 
         <h3>{item.nome}</h3>
 
-        <p>Preço: R$ {item.preco}</p>
+        <p>Preço: {formatarPreco(item.preco)}</p>
         <p> Quantidade: 
           <button onClick={() => diminuir(item._id)}>➖</button>
           {item.quantidade}
           <button onClick={() => aumentar(item)}>➕</button>
         </p>        
-        <button onClick={()=>{removeItem(item._id)}}>Remover item</button>
+        <button onClick={()=>{
+          setProdutoSelecionado(item._id)
+          setAcaoConfirmacao("removerItem")
+          setMostrarConfirmacao(true)
+          
+        }}>Remover item</button>
 
-        <p>Subtotal: R$ {item.preco * item.quantidade}</p>
+        <p>Subtotal: R$ {formatarPreco(item.preco * item.quantidade)}</p>
 
       </div>
 
     ))}
 
-    <h2>Total do Pedido: R$ {total}</h2> 
+    <h2>Total do Pedido: R$ {formatarPreco(total)}</h2> 
 
     <button onClick={() => {
       if(lista.length === 0){
@@ -185,7 +213,10 @@ const diminuir = (id) => {
     }}>
       Finalizar Pedido
     </button>
-    <button onClick={()=>{limparCarrinho()}}>Limpar pedido</button>
+    <button onClick={()=>{
+      setMostrarConfirmacao(true)
+      setAcaoConfirmacao("limparCarrinho")}}>
+        Limpar pedido</button>
       
       {mostrarFormulario && (
     <div style={styles.overlay}>
@@ -227,7 +258,21 @@ const diminuir = (id) => {
 
     </div>
   )}
-
+        <ModalConfirmacao
+      aberto={mostrarConfirmacao}
+      titulo="Tem certeza?"
+      mensagem={
+        acaoConfirmacao === "removerItem"
+          ? "Deseja remover este item?"
+          : "Deseja limpar todo o pedido?"
+      }
+      onConfirmar={confirmarAcao}
+      onCancelar={() => {
+        setMostrarConfirmacao(false)
+        setProdutoSelecionado(null)
+        setAcaoConfirmacao(null)
+  }}
+/>
     </>
   )
   

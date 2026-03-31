@@ -2,6 +2,7 @@ import axios from "axios"
 import { useState, useEffect } from "react"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
+import formatarPreco from "../utils/formatarpreco"
 
 function Catalogo () {
 
@@ -56,7 +57,7 @@ function Catalogo () {
            }}/>
           <h3>{produto.nome}</h3>
           <small>{produto.descricao}</small>
-          <p>R$ {produto.preco}</p>
+          <p>{formatarPreco(produto.preco)}</p>
           <button onClick={() => addItem(produto)}>
             Adicionar produto
           </button>

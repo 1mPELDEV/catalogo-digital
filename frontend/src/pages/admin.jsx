@@ -5,6 +5,8 @@ import axios from "axios"
 // importanto toastify
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+//importanto modal
+import ModalConfirmacao from '../components/modalConfirmacao'
 // rotas
 
 function Admin() {
@@ -204,6 +206,7 @@ const token = localStorage.getItem("token")
             setProdutoSelecionado(produto)
             setMostrarConfirmacao(true)
           }}>Deletar</button>
+
           <button onClick={() =>{
             setNome(produto.nome)
             setPreco(produto.preco)
@@ -213,34 +216,16 @@ const token = localStorage.getItem("token")
           }}>Editar</button>
         </div>
       ))}
-        {mostrarConfirmacao && (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
-        
-        <h3>Tem certeza?</h3>
-        <p>
-          Deseja deletar o produto{" "}
-          <strong>{produtoSelecionado?.nome}</strong>?
-        </p>
-
-        <div style={{display:"flex", gap:"10px", marginTop:"15px"}}>
-
-          <button onClick={deletarProduto}>
-            Confirmar
-          </button>
-
-          <button onClick={() => {
-            setMostrarConfirmacao(false)
-            setProdutoSelecionado(null)
-          }}>
-            Cancelar
-          </button>
-
-        </div>
-
-      </div>
-    </div>
-  )}
+      <ModalConfirmacao
+        aberto={mostrarConfirmacao}
+        titulo="Tem certeza?"
+        mensagem={`Deseja deletar o produto ${produtoSelecionado?.nome}?`}
+        onConfirmar={deletarProduto}
+        onCancelar={() => {
+          setMostrarConfirmacao(false)
+          setProdutoSelecionado(null)
+        }}
+      />
     </>    
   )
 }
