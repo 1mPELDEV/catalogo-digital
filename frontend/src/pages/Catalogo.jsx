@@ -42,7 +42,7 @@ function Catalogo () {
   <>
     <ToastContainer />
 
-    <h1>Bem vindo a Home</h1>
+    <h1 className="text-3xl text-green-500">Bem vindo a Home</h1>
     {produtos.map(produto => {
       const quantidade = lista.filter(item => item._id === produto._id).length
 

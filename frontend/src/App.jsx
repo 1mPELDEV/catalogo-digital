@@ -20,7 +20,6 @@ function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/pedido" element={<Pedido />}/>
         <Route path="/sobre" element={<Sobre />}/>
-        
       </Routes>
     </BrowserRouter>
   )
