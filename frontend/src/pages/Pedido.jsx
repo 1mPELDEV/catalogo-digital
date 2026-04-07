@@ -182,6 +182,13 @@ const diminuir = (id) => {
       <div key={item._id} style={{border:"1px solid #ccc", margin:"10px", padding:"10px"}}>
 
         <h3>{item.nome}</h3>
+        <img 
+            src={item.imagem || "https://picsum.photos/200"} 
+            alt={item.nome}
+            style={{width:"120px", height:"120px", objectFit:"cover"}}
+            onError={(e) => {
+            e.target.src = "https://picsum.photos/200"
+          }}/>
 
         <p>Preço: {formatarPreco(item.preco)}</p>
         <p> Quantidade: 

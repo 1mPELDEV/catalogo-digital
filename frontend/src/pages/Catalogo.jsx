@@ -8,6 +8,7 @@ function Catalogo () {
 
   const [produtos , setProdutos] = useState([])
   const [lista, setLista] = useState([])
+  const [busca, setBusca] = useState("")
 
   const list = async () =>{
     try{
@@ -38,35 +39,59 @@ function Catalogo () {
     window.dispatchEvent(new Event("storage"))
   }
 
+  const produtosFiltrados = produtos.filter((produto) =>
+  produto.nome.toLowerCase().includes(busca.toLowerCase())
+  )
+
   return (
   <>
     <ToastContainer />
 
-    <h1 className="text-3xl text-green-500">Bem vindo a Home</h1>
-    {produtos.map(produto => {
+    <input
+    type="text"
+    placeholder="Buscar produto..."
+    className="w-full max-w-md mx-auto block p-2 border rounded md:mt-8"
+    value={busca}
+    onChange={(e)=>{setBusca(e.target.value)}}
+    />
+    <div className="text-center py-8">
+        <h1 className="text-2xl md:text-4xl font-bold">Ofertas da Semana 🔥</h1>
+        <p className="text-gray-600 mt-2">Os melhores produtos com o melhor preço</p>
+    </div>
+
+    {produtosFiltrados.length === 0 ? (
+      <p className="text-center text-gray-500 mt-6">Nenhum item bate com a busca 😕</p>)
+      : (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+
+      {produtosFiltrados.map(produto => {
+
       const quantidade = lista.filter(item => item._id === produto._id).length
 
       return (
-        <div className="card" key={produto._id}>
+        <div className="bg-white rounded-lg shadow p-4 flex flex-col" key={produto._id}>
             <img 
               src={produto.imagem || "https://picsum.photos/200"} 
               alt={produto.nome}
-              style={{width:"120px", height:"120px", objectFit:"cover"}}
+              className="w-full h-48 object-cover rounded"
               onError={(e) => {
               e.target.src = "https://picsum.photos/200"
            }}/>
-          <h3>{produto.nome}</h3>
-          <small>{produto.descricao}</small>
-          <p>{formatarPreco(produto.preco)}</p>
-          <button onClick={() => addItem(produto)}>
-            Adicionar produto
-          </button>
-          {quantidade > 0 && (
-            <small>🛒 {quantidade} no pedido</small>
-          )}
-        </div>
-      )
-    })}
+            <h3 className="text-lg font-semibold mt-2" >{produto.nome}</h3>
+            <small className="text-gray-500" >{produto.descricao}</small>
+            <p className="text-green-600 font-bold mt-2">{formatarPreco(produto.preco)}</p>
+            <button className="mt-3 bg-green-500 text-white py-2 rounded hover:bg-green-600 transition" 
+              onClick={() => addItem(produto)}>
+              Adicionar produto
+            </button>
+            {quantidade > 0 && (
+              <small className="mt-1 text-gray-600">🛒 {quantidade} no pedido</small>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )}
+
 
   </>
   )
