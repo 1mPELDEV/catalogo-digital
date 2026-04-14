@@ -19,6 +19,9 @@ const [editandoId , setEditandoId] = useState(null)
 const [loading, setLoading] = useState(false)
 const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false)
 const [produtoSelecionado, setProdutoSelecionado] = useState(null)
+const [promocao, setPromocao] = useState(false)
+const [desconto, setDesconto] = useState(0)
+
 const navigate = useNavigate()
 const token = localStorage.getItem("token")
 
@@ -29,7 +32,7 @@ const token = localStorage.getItem("token")
       navigate("/") 
     }
   }, [])
-
+// READ
   const buscarProdutos = async () =>{
     try {
       setLoading(true) 
@@ -72,18 +75,24 @@ const token = localStorage.getItem("token")
     toast.warning("O preço deve ser maior do que 0!")
       return
     }
-
+//CREATE
     axios.post('http://localhost:8082/produtos', {
       nome,
       preco: Number(preco),
       descricao,
-      imagem
+      imagem,
+      promocao :{
+        ativa: promocao,
+        desconto: desconto
+      }
       },
       {headers : {Authorization: `Bearer ${token}`}}).then(()=>{
       setNome('')
       setDescricao('')
       setImagem('')
       setPreco('')
+      setDesconto(0)
+      setPromocao(false)
       toast.success("Criado com sucesso!")
       buscarProdutos()
     }).catch((err) =>{
@@ -91,7 +100,7 @@ const token = localStorage.getItem("token")
   console.log(err)
     })
   }
-
+//DELETE
   const deletarProduto = async () => {
 
     if(!produtoSelecionado) return
@@ -112,7 +121,7 @@ const token = localStorage.getItem("token")
     }
 
   }
-
+// UPDATE
   const atualizarProduto = ( id => {
 
       if(!nome.trim()){
@@ -129,14 +138,20 @@ const token = localStorage.getItem("token")
       nome,
       preco : Number(preco),
       descricao,
-      imagem
+      imagem,
+      promocao :{
+        ativa: promocao,
+        desconto: desconto
+      }
     },{ headers: { Authorization: `Bearer ${token}` }}
-    ).then(()=>{
+     ).then(()=>{
       setNome('')
       setPreco('')
       setDescricao('')
       setImagem('')
       setEditandoId(null)
+      setPromocao(false)
+      setDesconto(0)
       toast.success("Produto atualizado com sucesso!")
       buscarProdutos()
     }).catch((err) => {
@@ -179,7 +194,23 @@ const token = localStorage.getItem("token")
       {imagem && (
       <img src={imagem} style={{width:"100px"}} />
       )}
-      
+      <label className="flex items-center gap-2">
+       <input
+       type="checkbox"
+       checked={promocao}
+       onChange={(e) => setPromocao(e.target.checked)}
+       />
+      Produto em promoção 🔥
+     </label>
+      {promocao && (
+        <input
+            type="number"
+            placeholder="Desconto (R$)"
+            value={desconto}
+            onChange={(e) => setDesconto(Number(e.target.value))}
+            className=""
+          />       
+      )}
       <button onClick={()=>{
         if(editandoId){
           atualizarProduto(editandoId) 
@@ -202,17 +233,25 @@ const token = localStorage.getItem("token")
         <div className='card' key={produto._id}>
           <h3>{produto.nome}</h3>
           <p>R$ {produto.preco}</p>
+      {produto.promocao?.ativa && (
+          <p style={{ color: "red" }}>
+              🔥 Promoção: R$ {produto.promocao.desconto}
+          </p>
+        )}
           <button onClick={() => {
             setProdutoSelecionado(produto)
             setMostrarConfirmacao(true)
           }}>Deletar</button>
 
           <button onClick={() =>{
+            console.log(produto)
             setNome(produto.nome)
             setPreco(produto.preco)
             setDescricao(produto.descricao)
             setImagem(produto.imagem)
             setEditandoId(produto._id)
+            setDesconto(produto.promocao?.desconto || 0)
+            setPromocao(produto.promocao?.ativa || false)
           }}>Editar</button>
         </div>
       ))}

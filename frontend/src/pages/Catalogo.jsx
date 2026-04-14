@@ -30,7 +30,7 @@ function Catalogo () {
   }, [])
 
   const addItem = (produto) =>{
-
+     console.log("Lista antiga:", lista)
     const novaLista = [...lista, produto]
     setLista(novaLista)
     toast.success("Produto adicionado ao pedido!")
@@ -68,7 +68,10 @@ function Catalogo () {
       const quantidade = lista.filter(item => item._id === produto._id).length
 
       return (
-        <div className="bg-white rounded-lg shadow p-4 flex flex-col" key={produto._id}>
+        <div className="bg-white rounded-lg shadow p-4 flex flex-col relative" key={produto._id}>
+          {produto.promocao?.ativa && (
+          <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded"> Promoção 🔥</span>
+          )}
             <img 
               src={produto.imagem || "https://picsum.photos/200"} 
               alt={produto.nome}
@@ -78,7 +81,27 @@ function Catalogo () {
            }}/>
             <h3 className="text-lg font-semibold mt-2" >{produto.nome}</h3>
             <small className="text-gray-500" >{produto.descricao}</small>
-            <p className="text-green-600 font-bold mt-2">{formatarPreco(produto.preco)}</p>
+
+
+
+{produto.promocao?.ativa ? (
+  <>
+    <p className="text-gray-400 line-through">
+      {formatarPreco(produto.preco)}
+    </p>
+    <p className="text-green-600 font-bold">
+      {formatarPreco(produto.preco - produto.promocao.desconto)}
+    </p>
+  </>
+) : (
+  <p className="text-green-600 font-bold">
+    {formatarPreco(produto.preco)}
+  </p>
+)}
+
+
+
+
             <button className="mt-3 bg-green-500 text-white py-2 rounded hover:bg-green-600 transition" 
               onClick={() => addItem(produto)}>
               Adicionar produto
