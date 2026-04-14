@@ -29,12 +29,21 @@ function Catalogo () {
 
   }, [])
 
-  const addItem = (produto) =>{
-     console.log("Lista antiga:", lista)
-    const novaLista = [...lista, produto]
+  const addItem = (produto) => {
+
+    const precoFinal = produto.promocao?.ativa
+      ? produto.preco - produto.promocao.desconto
+      : produto.preco
+
+    const produtoComPreco = {
+      ...produto,
+      precoFinal
+    }
+    console.log(produtoComPreco)
+    const novaLista = [...lista, produtoComPreco]
+
     setLista(novaLista)
     toast.success("Produto adicionado ao pedido!")
-    console.log("Carrinho:", novaLista)
     localStorage.setItem("lista", JSON.stringify(novaLista))
     window.dispatchEvent(new Event("storage"))
   }
@@ -81,27 +90,13 @@ function Catalogo () {
            }}/>
             <h3 className="text-lg font-semibold mt-2" >{produto.nome}</h3>
             <small className="text-gray-500" >{produto.descricao}</small>
-
-
-
-{produto.promocao?.ativa ? (
-  <>
-    <p className="text-gray-400 line-through">
-      {formatarPreco(produto.preco)}
-    </p>
-    <p className="text-green-600 font-bold">
-      {formatarPreco(produto.preco - produto.promocao.desconto)}
-    </p>
-  </>
-) : (
-  <p className="text-green-600 font-bold">
-    {formatarPreco(produto.preco)}
-  </p>
-)}
-
-
-
-
+          {produto.promocao?.ativa ? (
+            <>
+              <p className="text-gray-400 line-through">{formatarPreco(produto.preco)}</p>
+              <p className="text-green-600 font-bold">{formatarPreco(produto.preco - produto.promocao.desconto)}</p>
+            </> ) : (
+              <p className="text-green-600 font-bold">{formatarPreco(produto.preco)}</p>
+          )}
             <button className="mt-3 bg-green-500 text-white py-2 rounded hover:bg-green-600 transition" 
               onClick={() => addItem(produto)}>
               Adicionar produto

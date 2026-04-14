@@ -54,7 +54,7 @@ useEffect(() => {
 }, [lista])
 
   const total = itensAgrupados.reduce((acc, item) => {
-  return acc + item.preco * item.quantidade
+  return acc + item.precoFinal * item.quantidade
 }, 0)
 
   const removeItem = (id) => {
@@ -112,7 +112,7 @@ const diminuir = (id) => {
     mensagem += `📍 Endereço: ${endereco}\n\n`
 
     itensAgrupados.forEach(item => {
-      mensagem += `• ${item.nome} x${item.quantidade} - R$ ${formatarPreco(item.preco * item.quantidade)}\n`
+      mensagem += `• ${item.nome} x${item.quantidade} - R$ ${formatarPreco(item.precoFinal* item.quantidade)}\n`
     })
 
     mensagem += `\n💰 Total: R$ ${formatarPreco(total)}`
@@ -190,7 +190,7 @@ const diminuir = (id) => {
             e.target.src = "https://picsum.photos/200"
           }}/>
 
-        <p>Preço: {formatarPreco(item.preco)}</p>
+        <p>Preço: {formatarPreco(item.precoFinal)}</p>
         <p> Quantidade: 
           <button onClick={() => diminuir(item._id)}>➖</button>
           {item.quantidade}
@@ -203,7 +203,7 @@ const diminuir = (id) => {
           
         }}>Remover item</button>
 
-        <p>Subtotal: R$ {formatarPreco(item.preco * item.quantidade)}</p>
+        <p>Subtotal: R$ {formatarPreco(item.precoFinal * item.quantidade)}</p>
 
       </div>
 
