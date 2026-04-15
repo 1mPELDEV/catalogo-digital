@@ -52,6 +52,13 @@ function Catalogo () {
   produto.nome.toLowerCase().includes(busca.toLowerCase())
   )
 
+  const produtosOrdenados = [...produtosFiltrados].sort((a, b) => {
+  const aPromo = a.promocao?.ativa ? 1 : 0
+  const bPromo = b.promocao?.ativa ? 1 : 0
+
+  return bPromo - aPromo
+})
+
   return (
   <>
     <ToastContainer />
@@ -72,7 +79,7 @@ function Catalogo () {
       <p className="text-center text-gray-500 mt-6">Nenhum item bate com a busca 😕</p>)
       : (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
 
-      {produtosFiltrados.map(produto => {
+      {produtosOrdenados.map(produto => {
 
       const quantidade = lista.filter(item => item._id === produto._id).length
 
