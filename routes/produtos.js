@@ -16,12 +16,14 @@ router.post('/', verificaToken , async (req,res)=>{
             nome: req.body.nome,
             preco: req.body.preco,
             descricao: req.body.descricao,
+            categoria: req.body.categoria,
             imagem: req.body.imagem,
             promocao: {
                 ativa: req.body.promocao?.ativa || false,
                 desconto: req.body.promocao?.desconto || 0
             }
         })
+        console.log("BODY:", req.body)
         await novoProduto.save()
 
         res.status(201).json(novoProduto)

@@ -3,19 +3,37 @@ function ModalConfirmacao({ aberto, titulo, mensagem, onConfirmar, onCancelar })
   if (!aberto) return null
 
   return (
-    <div style={styles.overlay} onClick={onCancelar}>
-      <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-[fadeBg_0.2s_ease]"
+      onClick={onCancelar}
+    >
 
-        <h3>{titulo}</h3>
-        <p>{mensagem}</p>
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-lg p-6 w-full max-w-sm shadow-lg text-center animate-[modalPop_0.3s_cubic-bezier(0.22,1,0.36,1)]"
+      >
 
-        <div style={{display:"flex", gap:"10px", marginTop:"15px"}}>
+        <h3 className="text-lg font-semibold mb-2">
+          {titulo}
+        </h3>
 
-          <button onClick={onConfirmar}>
+        <p className="text-gray-600 mb-4">
+          {mensagem}
+        </p>
+
+        <div className="flex gap-2">
+
+          <button 
+            onClick={onConfirmar}
+            className="flex-1 bg-red-500 text-white p-2 rounded hover:bg-green-600 transition"
+          >
             Confirmar
           </button>
 
-          <button onClick={onCancelar}>
+          <button 
+            onClick={onCancelar}
+            className="flex-1 bg-gray-200 p-2 rounded hover:bg-gray-300 transition"
+          >
             Cancelar
           </button>
 
@@ -24,28 +42,6 @@ function ModalConfirmacao({ aberto, titulo, mensagem, onConfirmar, onCancelar })
       </div>
     </div>
   )
-}
-
-const styles = {
-  overlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000
-  },
-  modal: {
-    background: "#fff",
-    padding: "20px",
-    borderRadius: "10px",
-    width: "300px",
-    textAlign: "center"
-  }
 }
 
 export default ModalConfirmacao

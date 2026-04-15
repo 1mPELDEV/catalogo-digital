@@ -21,6 +21,7 @@ const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false)
 const [produtoSelecionado, setProdutoSelecionado] = useState(null)
 const [promocao, setPromocao] = useState(false)
 const [desconto, setDesconto] = useState(0)
+const [categoria, setCategoria] = useState("")
 
 const navigate = useNavigate()
 const token = localStorage.getItem("token")
@@ -75,11 +76,16 @@ const token = localStorage.getItem("token")
     toast.warning("O preço deve ser maior do que 0!")
       return
     }
+    if(!categoria){
+    toast.warning("Selecione uma categoria!")
+    return
+    }
 //CREATE
     axios.post('http://localhost:8082/produtos', {
       nome,
       preco: Number(preco),
       descricao,
+      categoria,
       imagem,
       promocao :{
         ativa: promocao,
@@ -91,6 +97,7 @@ const token = localStorage.getItem("token")
       setDescricao('')
       setImagem('')
       setPreco('')
+      setCategoria('')
       setDesconto(0)
       setPromocao(false)
       toast.success("Criado com sucesso!")
@@ -138,6 +145,7 @@ const token = localStorage.getItem("token")
       nome,
       preco : Number(preco),
       descricao,
+      categoria,
       imagem,
       promocao :{
         ativa: promocao,
@@ -148,6 +156,7 @@ const token = localStorage.getItem("token")
       setNome('')
       setPreco('')
       setDescricao('')
+      setCategoria('')
       setImagem('')
       setEditandoId(null)
       setPromocao(false)
@@ -189,6 +198,16 @@ const token = localStorage.getItem("token")
       <h2>Cadastrar Produto</h2>
       <input type="text" placeholder='Nome' value={nome} onChange={(e) => setNome(e.target.value)} />
       <input type="number" placeholder='Preço' value={preco} onChange={(e) => setPreco(e.target.value)}/>
+      <select
+        value={categoria}
+        onChange={(e) => setCategoria(e.target.value)}
+      >
+        <option value="">Selecione uma categoria</option>
+        <option value="Bebidas">Bebidas</option>
+        <option value="Alimentos">Alimentos</option>
+        <option value="Limpeza">Limpeza</option>
+
+      </select>
       <input type="text" placeholder='Descrição' value={descricao} onChange={(e) => setDescricao(e.target.value)} />
       <input type="text" placeholder='URL da imagem' value={imagem} onChange={(e)=> setImagem(e.target.value)} />
       {imagem && (
@@ -250,6 +269,7 @@ const token = localStorage.getItem("token")
             setDescricao(produto.descricao)
             setImagem(produto.imagem)
             setEditandoId(produto._id)
+            setCategoria(produto.categoria || "")
             setDesconto(produto.promocao?.desconto || 0)
             setPromocao(produto.promocao?.ativa || false)
           }}>Editar</button>

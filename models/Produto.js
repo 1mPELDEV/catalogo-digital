@@ -24,7 +24,11 @@ const Produtos = new Schema({
     type: Date,
     default: Date.now
   },
-
+    categoria: {
+    type: String,
+    required: true,
+    trim: true
+  },
   promocao: {
     ativa: {
       type: Boolean,
@@ -34,7 +38,7 @@ const Produtos = new Schema({
       type: Number,
       default: 0,
       min: 0
-    }
+    }   
   }
 })
 

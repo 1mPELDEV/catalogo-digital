@@ -179,92 +179,109 @@ const diminuir = (id) => {
     
     {itensAgrupados.map(item => (
 
-      <div key={item._id} style={{border:"1px solid #ccc", margin:"10px", padding:"10px"}}>
-
-        <h3>{item.nome}</h3>
-        <img 
-            src={item.imagem || "https://picsum.photos/200"} 
-            alt={item.nome}
-            style={{width:"120px", height:"120px", objectFit:"cover"}}
-            onError={(e) => {
-            e.target.src = "https://picsum.photos/200"
-          }}/>
-
-        <p>Preço: {formatarPreco(item.precoFinal)}</p>
-        <p> Quantidade: 
-          <button onClick={() => diminuir(item._id)}>➖</button>
-          {item.quantidade}
-          <button onClick={() => aumentar(item)}>➕</button>
-        </p>        
-        <button onClick={()=>{
-          setProdutoSelecionado(item._id)
-          setAcaoConfirmacao("removerItem")
-          setMostrarConfirmacao(true)
-          
-        }}>Remover item</button>
-
-        <p>Subtotal: R$ {formatarPreco(item.precoFinal * item.quantidade)}</p>
-
+  <div key={item._id} className="bg-white rounded-lg shadow p-4 flex gap-4 items-center">
+    <img 
+      src={item.imagem || "https://picsum.photos/200"} 
+      alt={item.nome}
+      className="w-20 h-20 object-cover rounded"
+    />
+    <div className="flex-1">
+      <h3 className="font-semibold">{item.nome}</h3>
+      <p className="text-sm text-gray-500">
+        {formatarPreco(item.precoFinal)}
+      </p>
+      <div className="flex items-center gap-2 mt-2">
+        <button onClick={() => diminuir(item._id)} className="px-2 bg-gray-200 rounded">➖</button>
+        <span>{item.quantidade}</span>
+        <button onClick={() => aumentar(item)} className="px-2 bg-gray-200 rounded">➕</button>
       </div>
+      <p className="mt-2 font-bold text-green-600">
+        {formatarPreco(item.precoFinal * item.quantidade)}
+      </p>
+    </div>
+    <button 
+      onClick={()=>{
+        setProdutoSelecionado(item._id)
+        setAcaoConfirmacao("removerItem")
+        setMostrarConfirmacao(true)
+      }}
+      className="text-red-500 hover:underline"
+    >
+      Remover
+    </button>
+  </div>
+  ))}
 
-    ))}
-
-    <h2>Total do Pedido: R$ {formatarPreco(total)}</h2> 
-
-    <button onClick={() => {
-      if(lista.length === 0){
-        toast.warning("Nenhum ítem no pedido!")
-        return
-      }
-      setMostrarFormulario(true)
-    }}>
+  <div className="max-w-3xl mx-auto mt-6 space-y-3">
+    <h2 className="text-xl font-bold">Total: {formatarPreco(total)}</h2>
+    <button
+      onClick={() => {
+        if(lista.length === 0){
+          toast.warning("Nenhum ítem no pedido!")
+          return
+        }
+        setMostrarFormulario(true)
+      }}
+      className="w-full bg-green-600 text-white p-3 rounded hover:bg-green-700"
+    >
       Finalizar Pedido
     </button>
-    <button onClick={()=>{
-      setMostrarConfirmacao(true)
-      setAcaoConfirmacao("limparCarrinho")}}>
-        Limpar pedido</button>
+    <button
+      onClick={()=>{
+        setMostrarConfirmacao(true)
+        setAcaoConfirmacao("limparCarrinho")
+      }}
+      className="w-full bg-red-500 text-white p-3 rounded hover:bg-red-600"
+    >
+      Limpar Pedido
+    </button>
+</div>
       
-      {mostrarFormulario && (
-    <div style={styles.overlay}>
+{mostrarFormulario && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 
-      <div style={styles.modal}>
+  <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg animate-[modalPop_0.35s_cubic-bezier(0.22,1,0.36,1)]">
 
-        <h2>Quase lá 😄</h2>
-        <p>Digite seus dados para finalizar</p>
+      <h2 className="text-xl font-bold mb-2">Quase lá 😄</h2>
+      <p className="text-gray-600 mb-4">Digite seus dados para finalizar</p>
 
-        <input 
-          type="text"
-          placeholder="Seu nome"
-          value={nomeCliente}
-          onChange={(e) => setNomeCliente(e.target.value)}
-          style={styles.input}
-        />
+      <input 
+        type="text"
+        placeholder="Seu nome"
+        value={nomeCliente}
+        onChange={(e) => setNomeCliente(e.target.value)}
+        className="w-full p-2 border rounded mb-3"
+      />
 
-        <input 
-          type="text"
-          placeholder="Endereço"
-          value={endereco}
-          onChange={(e) => setEndereco(e.target.value)}
-          style={styles.input}
-        />
+      <input 
+        type="text"
+        placeholder="Endereço"
+        value={endereco}
+        onChange={(e) => setEndereco(e.target.value)}
+        className="w-full p-2 border rounded mb-4"
+      />
 
-        <div style={{display:"flex", gap:"10px", marginTop:"10px"}}>
+      <div className="flex gap-2">
 
-          <button onClick={finalizarPedido}>
-            Enviar WhatsApp
-          </button>
+        <button 
+          onClick={finalizarPedido}
+          className="flex-1 bg-green-600 text-white p-2 rounded hover:bg-green-700"
+        >
+          Enviar WhatsApp
+        </button>
 
-          <button onClick={() => setMostrarFormulario(false)}>
-            Cancelar
-          </button>
-
-        </div>
+        <button 
+          onClick={() => setMostrarFormulario(false)}
+          className="flex-1 bg-gray-300 p-2 rounded hover:bg-gray-400"
+        >
+          Cancelar
+        </button>
 
       </div>
 
     </div>
-  )}
+  </div>
+)}
         <ModalConfirmacao
       aberto={mostrarConfirmacao}
       titulo="Tem certeza?"

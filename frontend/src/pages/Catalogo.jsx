@@ -9,6 +9,7 @@ function Catalogo () {
   const [produtos , setProdutos] = useState([])
   const [lista, setLista] = useState([])
   const [busca, setBusca] = useState("")
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState("")
 
   const list = async () =>{
     try{
@@ -48,8 +49,14 @@ function Catalogo () {
     window.dispatchEvent(new Event("storage"))
   }
 
-  const produtosFiltrados = produtos.filter((produto) =>
-  produto.nome.toLowerCase().includes(busca.toLowerCase())
+  const produtosFiltrados = produtos
+  .filter(produto =>
+    produto.nome.toLowerCase().includes(busca.toLowerCase())
+  )
+  .filter(produto =>
+    categoriaSelecionada
+      ? produto.categoria === categoriaSelecionada
+      : true
   )
 
   const produtosOrdenados = [...produtosFiltrados].sort((a, b) => {
@@ -62,14 +69,29 @@ function Catalogo () {
   return (
   <>
     <ToastContainer />
-
+<div className="max-w-4xl mx-auto px-4 mt-6">
+  <p className="text-sm text-gray-600 mb-2">🔎 Busque ou filtre produtos</p>
+  <div className="flex flex-col md:flex-row gap-3">
     <input
-    type="text"
-    placeholder="Buscar produto..."
-    className="w-full max-w-md mx-auto block p-2 border rounded md:mt-8"
-    value={busca}
-    onChange={(e)=>{setBusca(e.target.value)}}
+      type="text"
+      placeholder="Buscar produto..."
+      value={busca}
+      onChange={(e) => setBusca(e.target.value)}
+      className="flex-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
     />
+    <select
+      value={categoriaSelecionada}
+      onChange={(e) => setCategoriaSelecionada(e.target.value)}
+      className="p-2 border rounded md:w-56 focus:outline-none focus:ring-2 focus:ring-green-400"
+    >
+      <option value="">Todas</option>
+      <option value="Bebidas">Bebidas</option>
+      <option value="Alimentos">Alimentos</option>
+      <option value="Limpeza">Limpeza</option>
+    </select>
+  </div>
+</div>
+
     <div className="text-center py-8">
         <h1 className="text-2xl md:text-4xl font-bold">Ofertas da Semana 🔥</h1>
         <p className="text-gray-600 mt-2">Os melhores produtos com o melhor preço</p>
