@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import formatarPreco from "../utils/formatarpreco"
+import { loja } from "../config/loja"
 
 function Catalogo () {
 
@@ -66,6 +67,16 @@ function Catalogo () {
   return bPromo - aPromo
 })
 
+const abrirWhatsApp = (produto) => {
+  const numero = "5574999105013" // depois deixa dinâmico
+
+  const mensagem = `Olá! Tenho interesse no produto: ${produto.nome}`
+
+  const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
+
+  window.open(url, "_blank")
+}
+
   return (
   <>
     <ToastContainer />
@@ -97,13 +108,15 @@ function Catalogo () {
         <p className="text-gray-600 mt-2">Os melhores produtos com o melhor preço</p>
     </div>
 
-    {produtosFiltrados.length === 0 ? (
+    {produtosOrdenados.length === 0 ? (
       <p className="text-center text-gray-500 mt-6">Nenhum item bate com a busca 😕</p>)
       : (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
 
       {produtosOrdenados.map(produto => {
-
-      const quantidade = lista.filter(item => item._id === produto._id).length
+        // evita calcular quantidade se não tiver carrinho
+      const quantidade = loja.funcionalidades.carrinho
+        ? lista.filter(item => item._id === produto._id).length
+        : 0
 
       return (
         <div className="bg-white rounded-lg shadow p-4 flex flex-col relative" key={produto._id}>
@@ -126,12 +139,25 @@ function Catalogo () {
             </> ) : (
               <p className="text-green-600 font-bold">{formatarPreco(produto.preco)}</p>
           )}
-            <button className="mt-3 bg-green-500 text-white py-2 rounded hover:bg-green-600 transition" 
-              onClick={() => addItem(produto)}>
+          {loja.funcionalidades.carrinho ? (
+            <button
+              className="mt-3 bg-green-500 text-white py-2 rounded hover:bg-green-600 transition"
+              onClick={() => addItem(produto)}
+            >
               Adicionar produto
             </button>
-            {quantidade > 0 && (
-              <small className="mt-1 text-gray-600">🛒 {quantidade} no pedido</small>
+          ) : (
+            <button
+              className="mt-3 bg-green-500 text-white py-2 rounded hover:bg-green-600 transition"
+              onClick={() => abrirWhatsApp(produto)}
+            >
+              Falar no WhatsApp
+            </button>
+          )}
+            {loja.funcionalidades.carrinho && quantidade > 0 && (
+              <small className="mt-1 text-gray-600">
+                🛒 {quantidade} no pedido
+              </small>
             )}
           </div>
         )

@@ -189,104 +189,200 @@ const token = localStorage.getItem("token")
   }
 }
 
-  return (
-    <>
-        <ToastContainer />
-        
-      <h1>Catálogo Digital</h1>
-      <hr/>
-      <h2>Cadastrar Produto</h2>
-      <input type="text" placeholder='Nome' value={nome} onChange={(e) => setNome(e.target.value)} />
-      <input type="number" placeholder='Preço' value={preco} onChange={(e) => setPreco(e.target.value)}/>
-      <select
-        value={categoria}
-        onChange={(e) => setCategoria(e.target.value)}
-      >
-        <option value="">Selecione uma categoria</option>
-        <option value="Bebidas">Bebidas</option>
-        <option value="Alimentos">Alimentos</option>
-        <option value="Limpeza">Limpeza</option>
+return (
+  <>
+    <ToastContainer />
 
-      </select>
-      <input type="text" placeholder='Descrição' value={descricao} onChange={(e) => setDescricao(e.target.value)} />
-      <input type="text" placeholder='URL da imagem' value={imagem} onChange={(e)=> setImagem(e.target.value)} />
-      {imagem && (
-      <img src={imagem} style={{width:"100px"}} />
-      )}
-      <label className="flex items-center gap-2">
-       <input
-       type="checkbox"
-       checked={promocao}
-       onChange={(e) => setPromocao(e.target.checked)}
-       />
-      Produto em promoção 🔥
-     </label>
-      {promocao && (
+    <div className="max-w-5xl mx-auto p-4">
+
+      {/* TÍTULO */}
+      <h1 className="text-3xl font-bold mb-4 text-center">
+        Painel Admin
+      </h1>
+
+      <hr className="mb-6"/>
+
+      {/* FORM */}
+      <div className="bg-white shadow rounded-lg p-4 mb-8">
+
+        <h2 className="text-xl font-semibold mb-4">
+          Cadastrar Produto
+        </h2>
+
+        <div className="grid md:grid-cols-2 gap-4">
+
+          <input
+            type="text"
+            placeholder="Nome"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            className="p-2 border rounded"
+          />
+
+          <input
+            type="number"
+            placeholder="Preço"
+            value={preco}
+            onChange={(e) => setPreco(e.target.value)}
+            className="p-2 border rounded"
+          />
+
+          <select
+            value={categoria}
+            onChange={(e) => setCategoria(e.target.value)}
+            className="p-2 border rounded"
+          >
+            <option value="">Selecione uma categoria</option>
+            <option value="Bebidas">Bebidas</option>
+            <option value="Alimentos">Alimentos</option>
+            <option value="Limpeza">Limpeza</option>
+          </select>
+
+          <input
+            type="text"
+            placeholder="URL da imagem"
+            value={imagem}
+            onChange={(e) => setImagem(e.target.value)}
+            className="p-2 border rounded"
+          />
+
+        </div>
+
         <input
+          type="text"
+          placeholder="Descrição"
+          value={descricao}
+          onChange={(e) => setDescricao(e.target.value)}
+          className="p-2 border rounded w-full mt-4"
+        />
+
+        {/* PREVIEW */}
+        {imagem && (
+          <img
+            src={imagem}
+            className="w-24 h-24 object-cover mt-4 rounded"
+          />
+        )}
+
+        {/* PROMO */}
+        <label className="flex items-center gap-2 mt-4">
+          <input
+            type="checkbox"
+            checked={promocao}
+            onChange={(e) => setPromocao(e.target.checked)}
+          />
+          Produto em promoção 🔥
+        </label>
+
+        {promocao && (
+          <input
             type="number"
             placeholder="Desconto (R$)"
             value={desconto}
             onChange={(e) => setDesconto(Number(e.target.value))}
-            className=""
-          />       
-      )}
-      <button onClick={()=>{
-        if(editandoId){
-          atualizarProduto(editandoId) 
-        }else{
-          criarProduto()
-        }
-      }}>{ editandoId ? "Atualizar Produto" : "Criar Produto"}</button>
-      {nome}
-      {preco}
+            className="p-2 border rounded w-full mt-2"
+          />
+        )}
 
-      <h2>Lista de Produtos</h2>
+        {/* BOTÃO */}
+        <button
+          onClick={() => {
+            if (editandoId) {
+              atualizarProduto(editandoId)
+            } else {
+              criarProduto()
+            }
+          }}
+          className="mt-4 w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white p-2 rounded"
+        >
+          {editandoId ? "Atualizar Produto" : "Criar Produto"}
+        </button>
+
+      </div>
+
+      {/* LISTA */}
+      <h2 className="text-xl font-semibold mb-4">
+        Lista de Produtos
+      </h2>
+
       {loading && <p>🔄 Carregando produtos...</p>}
-      
+
       {!loading && produtos.length === 0 && (
-        <p style={{ opacity: 0.6 }}>
+        <p className="text-gray-500">
           📦 Nenhum produto cadastrado ainda.
         </p>
       )}
-      {!loading && produtos.map(produto => (
-        <div className='card' key={produto._id}>
-          <h3>{produto.nome}</h3>
-          <p>R$ {produto.preco}</p>
-      {produto.promocao?.ativa && (
-          <p style={{ color: "red" }}>
-              🔥 Promoção: R$ {produto.promocao.desconto}
-          </p>
-        )}
-          <button onClick={() => {
-            setProdutoSelecionado(produto)
-            setMostrarConfirmacao(true)
-          }}>Deletar</button>
 
-          <button onClick={() =>{
-            console.log(produto)
-            setNome(produto.nome)
-            setPreco(produto.preco)
-            setDescricao(produto.descricao)
-            setImagem(produto.imagem)
-            setEditandoId(produto._id)
-            setCategoria(produto.categoria || "")
-            setDesconto(produto.promocao?.desconto || 0)
-            setPromocao(produto.promocao?.ativa || false)
-          }}>Editar</button>
-        </div>
-      ))}
-      <ModalConfirmacao
-        aberto={mostrarConfirmacao}
-        titulo="Tem certeza?"
-        mensagem={`Deseja deletar o produto ${produtoSelecionado?.nome}?`}
-        onConfirmar={deletarProduto}
-        onCancelar={() => {
-          setMostrarConfirmacao(false)
-          setProdutoSelecionado(null)
-        }}
-      />
-    </>    
-  )
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+        {!loading && produtos.map(produto => (
+
+          <div key={produto._id} className="bg-white rounded shadow p-4">
+
+            <h3 className="font-semibold">
+              {produto.nome}
+            </h3>
+
+            <p className="text-gray-600">
+              R$ {produto.preco}
+            </p>
+
+            {produto.promocao?.ativa && (
+              <p className="text-red-500 text-sm mt-1">
+                🔥 Promoção: R$ {produto.promocao.desconto}
+              </p>
+            )}
+
+            <div className="flex gap-2 mt-4">
+
+              <button
+                onClick={() => {
+                  setProdutoSelecionado(produto)
+                  setMostrarConfirmacao(true)
+                }}
+                className="flex-1 bg-red-500 text-white p-2 rounded hover:bg-red-600"
+              >
+                Deletar
+              </button>
+
+              <button
+                onClick={() => {
+                  setNome(produto.nome)
+                  setPreco(produto.preco)
+                  setDescricao(produto.descricao)
+                  setImagem(produto.imagem)
+                  setEditandoId(produto._id)
+                  setCategoria(produto.categoria || "")
+                  setDesconto(produto.promocao?.desconto || 0)
+                  setPromocao(produto.promocao?.ativa || false)
+                }}
+                className="flex-1 bg-gray-200 p-2 rounded hover:bg-gray-300"
+              >
+                Editar
+              </button>
+
+            </div>
+
+          </div>
+
+        ))}
+
+      </div>
+
+    </div>
+
+    <ModalConfirmacao
+      aberto={mostrarConfirmacao}
+      titulo="Tem certeza?"
+      mensagem={`Deseja deletar o produto ${produtoSelecionado?.nome}?`}
+      onConfirmar={deletarProduto}
+      onCancelar={() => {
+        setMostrarConfirmacao(false)
+        setProdutoSelecionado(null)
+      }}
+    />
+  </>
+)
 }
 
 export default Admin

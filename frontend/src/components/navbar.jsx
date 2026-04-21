@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom"
 import { useState, useEffect } from "react"
+import { loja } from "../config/loja"
 
 function Navbar() {
   const [logado, setLogado] = useState(false)
@@ -61,6 +62,11 @@ function Navbar() {
             <Link to="/Pedido">
               🛒 ({quantidade})
             </Link>
+
+            {loja.funcionalidades.carrinho && (
+            <Link to="/Pedido">
+              Pedido 🛒 ({quantidade})
+            </Link>)}
 
             <Link to="/Sobre">Sobre</Link>
 
