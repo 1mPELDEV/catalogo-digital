@@ -1,21 +1,34 @@
 import { Link } from "react-router-dom"
 import { useState, useEffect } from "react"
-import { loja } from "../config/loja"
+import { useLoja } from "../hooks/useLoja"
+// import { cores } from "../utils/tema"
 
 function Navbar() {
+
+  const loja = useLoja() // ✅ PRIMEIRO
+
   const [logado, setLogado] = useState(false)
   const [quantidade, setQuantidade] = useState(0)
-  const [open, setOpen] = useState(false)
 
-  const verificarLogin = () => {
-    const token = localStorage.getItem("token")
-    setLogado(!!token)
-  }
+  const cor = loja?.tema?.corPrimaria || "#22c55e"
+//   const tema = cores[cor] || {
+//   bg: "bg-green-500",
+//   text: "text-green-600"
+// }
+    useEffect(() => {
+    console.log("LOJA ATUALIZOU:", loja)
+  }, [loja])
+
 
   useEffect(() => {
     const atualizarCarrinho = () => {
       const carrinho = JSON.parse(localStorage.getItem("lista")) || []
       setQuantidade(carrinho.length)
+    }
+
+      const verificarLogin = () => {
+    const token = localStorage.getItem("token")
+    setLogado(!!token)
     }
 
     atualizarCarrinho()
@@ -25,8 +38,8 @@ function Navbar() {
     window.addEventListener("storage", verificarLogin)
 
     return () => {
-      window.removeEventListener("storage", verificarLogin)
       window.removeEventListener("storage", atualizarCarrinho)
+      window.removeEventListener("storage", verificarLogin)
     }
   }, [])
 
@@ -36,81 +49,49 @@ function Navbar() {
   }
 
   return (
-    <nav className="bg-green-200">
-      <div className="max-w-6xl mx-auto px-4">
+    <nav className={`text-white p-4 shadow-md`} style={{backgroundColor: cor}}>
+      <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
 
-        {/* Topo */}
-        <div className="flex justify-between items-center h-14">
+        <h1 className="text-lg md:text-xl font-bold">
+          {loja?.nome || "Carregando..."}
+        </h1>
 
-          <Link to="/" className="font-bold text-lg">Catálogo</Link>
+        <div className="flex flex-wrap items-center gap-4 text-sm md:text-base">
 
-          {/* Botão mobile */}
-          <button
-            className="md:hidden text-xl"
-            onClick={() => setOpen(!open)}
-          >
-            ☰
-          </button>
+          <Link to="/" className="hover:opacity-80 transition">
+            Catálogo
+          </Link>
 
-          {/* Menu desktop */}
-          <div className="hidden md:flex gap-6 items-center">
-
-            <Link to="/">Catálogo</Link>
-
-            {logado && <Link to="/admin">Admin</Link>}
-
-            <Link to="/Pedido">
-              🛒 ({quantidade})
+          {logado && (
+            <Link to="/admin" className="hover:opacity-80 transition">
+              Admin
             </Link>
+          )}
 
-            {loja.funcionalidades.carrinho && (
-            <Link to="/Pedido">
+          {loja?.funcionalidades?.carrinho && (
+            <Link to="/pedido" className="hover:opacity-80 transition">
               Pedido 🛒 ({quantidade})
-            </Link>)}
-
-            <Link to="/Sobre">Sobre</Link>
-
-            {!logado && <Link to="/login">Login</Link>}
-            {logado && (
-              <button onClick={sair} className="text-red-600">
-                Sair
-              </button>
-            )}
-
-          </div>
-        </div>
-
-        {/* Menu mobile */}
-        {open && (
-          <div className="flex flex-col gap-4 pb-4 md:hidden">
-
-            <Link to="/" onClick={() => setOpen(false)}>
-              Catálogo
             </Link>
+          )}
 
-            {logado && (
-              <Link to="/admin" onClick={() => setOpen(false)}>
-                Admin
-              </Link>
-            )}
+          <Link to="/sobre" className="hover:opacity-80 transition">
+            Sobre
+          </Link>
 
-            <Link to="/Pedido" onClick={() => setOpen(false)}>Pedido🛒 ({quantidade})</Link>
-            <Link to="/Sobre" onClick={() => setOpen(false)}>Sobre</Link>
+          {!logado ? (
+            <Link to="/login" className={`bg-white px-3 py-1 rounded hover:bg-gray-100 transition`}>
+              Login
+            </Link>
+          ) : (
+            <button
+              onClick={sair}
+              className="bg-red-500 px-3 py-1 rounded hover:bg-red-600 transition"
+            >
+              Sair
+            </button>
+          )}
 
-            {!logado && (
-              <Link to="/login" onClick={() => setOpen(false)}>Login</Link>
-            )}
-
-            {logado && (
-              <button
-                onClick={() => {
-                  sair()
-                  setOpen(false)
-                }}
-                className="text-red-600 text-left">Sair</button>
-            )}
-          </div>
-        )}
+        </div>
       </div>
     </nav>
   )

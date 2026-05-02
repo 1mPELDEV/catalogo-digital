@@ -1,6 +1,7 @@
 
 const mongoose = require("mongoose")
 const bcrypt = require("bcrypt")
+const Admin = require("./Admin"); // importa o model
 
 mongoose.connect("mongodb://localhost/db-catalogo")
 

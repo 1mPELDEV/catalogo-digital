@@ -29,6 +29,9 @@ app.use("/produtos", produtos)
 const admin = require('./routes/admin')
 app.use("/admin", admin)
 
+const loja = require("./routes/loja")
+app.use("/loja", loja)
+
     //Rota principal
 app.get('/',(req,res)=>{
     res.send("Rota principal funcionando")

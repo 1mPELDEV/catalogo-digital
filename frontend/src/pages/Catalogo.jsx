@@ -11,6 +11,7 @@ function Catalogo () {
   const [lista, setLista] = useState([])
   const [busca, setBusca] = useState("")
   const [categoriaSelecionada, setCategoriaSelecionada] = useState("")
+  // const tema = cores[loja.tema.corPrimaria]
 
   const list = async () =>{
     try{
@@ -70,7 +71,12 @@ function Catalogo () {
 const abrirWhatsApp = (produto) => {
   const numero = "5574999105013" // depois deixa dinâmico
 
-  const mensagem = `Olá! Tenho interesse no produto: ${produto.nome}`
+    const mensagem = `Olá! Tenho interesse no produto:
+
+    🛒 ${produto.nome}
+    💰 ${formatarPreco(produto.preco)}
+
+    Pode me dar mais informações?`
 
   const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
 
@@ -141,7 +147,7 @@ const abrirWhatsApp = (produto) => {
           )}
           {loja.funcionalidades.carrinho ? (
             <button
-              className="mt-3 bg-green-500 text-white py-2 rounded hover:bg-green-600 transition"
+              className={`mt-3 bg-green-500 hover:bg-red-600 text-white py-2 rounded transition`}
               onClick={() => addItem(produto)}
             >
               Adicionar produto

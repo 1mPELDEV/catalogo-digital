@@ -302,7 +302,7 @@ return (
 
       {/* LISTA */}
       <h2 className="text-xl font-semibold mb-4">
-        Lista de Produtos
+        Lista de Produtos Cadastrados 
       </h2>
 
       {loading && <p>🔄 Carregando produtos...</p>}
@@ -318,6 +318,8 @@ return (
         {!loading && produtos.map(produto => (
 
           <div key={produto._id} className="bg-white rounded shadow p-4">
+
+            <img src={produto.imagem} alt="" /> 
 
             <h3 className="font-semibold">
               {produto.nome}

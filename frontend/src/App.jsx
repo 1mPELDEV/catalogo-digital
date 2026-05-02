@@ -5,6 +5,8 @@ import Admin from "./pages/admin"
 import Home from "./pages/Catalogo"
 import Sobre from "./pages/Sobre"
 import Pedido from "./pages/Pedido"
+import RotaProtegida from "./components/RotaProtegida"
+import { loja } from "./config/loja"
 
 // components
 import Navbar from "./components/navbar"
