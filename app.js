@@ -1,4 +1,6 @@
 //importações
+    //importando dotenv
+    require("dotenv").config()
 
     //importando express
 const express = require('express')
@@ -19,6 +21,7 @@ app.use(cors({
   origin: "http://localhost:5173"
 }))
 
+
 //Middleweres
 app.use(express.json())
 
@@ -31,6 +34,9 @@ app.use("/admin", admin)
 
 const loja = require("./routes/loja")
 app.use("/loja", loja)
+
+const auth = require("./routes/auth")
+ app.use("/auth" , auth)
 
     //Rota principal
 app.get('/',(req,res)=>{

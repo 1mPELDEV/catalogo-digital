@@ -1,27 +1,53 @@
-const mongoose = require("mongoose")
-
+const mongoose = require('mongoose')
 const LojaSchema = new mongoose.Schema({
+
   nome: String,
-  tipo: String, // "mercado", "estudio", etc
+
+  logo: String,
+
+  banner: String,
+
+ slug: {
+    type: String,
+    unique: true,
+    required: true
+  },
 
   tema: {
-    corPrimaria: String
+    corPrimaria: {
+      type: String,
+      default: "green"
+    }
   },
 
   contato: {
     whatsapp: String
   },
 
-  funcionalidades: {
-    carrinho: Boolean
+  features: {
+
+    catalogo: {
+      type: Boolean,
+      default: true
+    },
+
+    pedidoWhatsapp: {
+      type: Boolean,
+      default: true
+    },
+
+    carrinho: {
+      type: Boolean,
+      default: false
+    }
+
   },
 
-  landing: {
-    titulo: String,
-    descricao: String,
-    cta: String,
-    acao: String // "whatsapp" | "carrinho"
+  adminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
   }
+
 })
 
-module.exports = mongoose.model("lojas", LojaSchema)
+module.exports = mongoose.model('Loja', LojaSchema)

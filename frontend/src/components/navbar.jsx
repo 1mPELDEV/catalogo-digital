@@ -1,24 +1,21 @@
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { useLoja } from "../hooks/useLoja"
-// import { cores } from "../utils/tema"
 
 function Navbar() {
-
-  const loja = useLoja() // ✅ PRIMEIRO
 
   const [logado, setLogado] = useState(false)
   const [quantidade, setQuantidade] = useState(0)
 
-  const cor = loja?.tema?.corPrimaria || "#22c55e"
-//   const tema = cores[cor] || {
-//   bg: "bg-green-500",
-//   text: "text-green-600"
-// }
-    useEffect(() => {
-    console.log("LOJA ATUALIZOU:", loja)
-  }, [loja])
+  const location = useLocation()
+  const slug = location.pathname.split("/")[1] || null
 
+  const rotasInternas = ["admin", "login", "cadastro", "pedido"]
+  const slugDaLoja = rotasInternas.includes(slug) ? null : slug
+
+  const loja = useLoja(slugDaLoja)
+
+  const corPrimaria = loja?.tema?.corPrimaria || "#22c55e"
 
   useEffect(() => {
     const atualizarCarrinho = () => {
@@ -26,9 +23,9 @@ function Navbar() {
       setQuantidade(carrinho.length)
     }
 
-      const verificarLogin = () => {
-    const token = localStorage.getItem("token")
-    setLogado(!!token)
+    const verificarLogin = () => {
+      const token = localStorage.getItem("token")
+      setLogado(!!token)
     }
 
     atualizarCarrinho()
@@ -49,18 +46,25 @@ function Navbar() {
   }
 
   return (
-    <nav className={`text-white p-4 shadow-md`} style={{backgroundColor: cor}}>
+    <nav className="text-white p-4 shadow-md" style={{ backgroundColor: corPrimaria }}>
       <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
 
-        <h1 className="text-lg md:text-xl font-bold">
-          {loja?.nome || "Carregando..."}
-        </h1>
+        <div className="flex items-center gap-3">
+          {loja?.logo && (
+            <img src={loja.logo} alt={loja.nome} className="w-8 h-8 object-cover rounded-full" />
+          )}
+          <h1 className="text-lg md:text-xl font-bold">
+            {loja?.nome || ""}
+          </h1>
+        </div>
 
         <div className="flex flex-wrap items-center gap-4 text-sm md:text-base">
 
-          <Link to="/" className="hover:opacity-80 transition">
-            Catálogo
-          </Link>
+          {slugDaLoja && (
+            <Link to={`/${slugDaLoja}`} className="hover:opacity-80 transition">
+              Catálogo
+            </Link>
+          )}
 
           {logado && (
             <Link to="/admin" className="hover:opacity-80 transition">
@@ -68,18 +72,12 @@ function Navbar() {
             </Link>
           )}
 
-          {loja?.funcionalidades?.carrinho && (
-            <Link to="/pedido" className="hover:opacity-80 transition">
-              Pedido 🛒 ({quantidade})
-            </Link>
-          )}
-
-          <Link to="/sobre" className="hover:opacity-80 transition">
-            Sobre
+          <Link to="/pedido" className="hover:opacity-80 transition">
+            Pedido 🛒 ({quantidade})
           </Link>
 
           {!logado ? (
-            <Link to="/login" className={`bg-white px-3 py-1 rounded hover:bg-gray-100 transition`}>
+            <Link to="/login" className="bg-white px-3 py-1 rounded hover:bg-gray-100 transition" style={{ color: corPrimaria }}>
               Login
             </Link>
           ) : (

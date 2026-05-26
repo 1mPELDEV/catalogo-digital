@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt")
-const Admin  = require('../models/admin')
+const Admin  = require('../models/Admin')
 
 router.post('/login' , async (req,res) => {
     try{
@@ -21,9 +21,12 @@ router.post('/login' , async (req,res) => {
         }
 
         const token = jwt.sign(
-            {id: admin._id},
-            "SEGREDO_SUPER_FORTE",
-            {expiresIn: '1d'}
+        {
+            id: admin._id,
+            lojaId: admin.lojaId 
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '1d' }
         )
         res.json({token})
     } catch (erro) {

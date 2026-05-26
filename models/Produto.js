@@ -7,6 +7,11 @@ const Produtos = new Schema({
     required: [true, "O nome é obrigatorio"],
     trim: true
   },
+  adminId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Admin",
+  required: true
+  },
   preco: {
     type: Number,
     required: [true, "O preço é obrigatório"],

@@ -2,20 +2,18 @@ import axios from "axios"
 import { useState, useEffect } from "react"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
-import formatarPreco from "../utils/formatarpreco"
-import { loja } from "../config/loja"
+import formatarPreco from "../../utils/formatarpreco"
 
-function Catalogo () {
+function ProdutosGrid ({slug , loja}) {
 
   const [produtos , setProdutos] = useState([])
   const [lista, setLista] = useState([])
   const [busca, setBusca] = useState("")
   const [categoriaSelecionada, setCategoriaSelecionada] = useState("")
-  // const tema = cores[loja.tema.corPrimaria]
 
   const list = async () =>{
     try{
-      const res = await axios.get("http://localhost:8082/produtos")
+      const res = await axios.get(`http://localhost:8082/produtos/${slug}`)
       setProdutos(res.data)
     }catch(err){
       console.log("erro " + err)
@@ -30,7 +28,7 @@ function Catalogo () {
     setLista(pedidoSalvo)
   }
 
-  }, [])
+  }, [slug])
 
   const addItem = (produto) => {
 
@@ -69,7 +67,7 @@ function Catalogo () {
 })
 
 const abrirWhatsApp = (produto) => {
-  const numero = "5574999105013" // depois deixa dinâmico
+  const numero = loja?.contato?.whatsapp // depois deixa dinâmico
 
     const mensagem = `Olá! Tenho interesse no produto:
 
@@ -85,7 +83,7 @@ const abrirWhatsApp = (produto) => {
 
   return (
   <>
-    <ToastContainer />
+
 <div className="max-w-4xl mx-auto px-4 mt-6">
   <p className="text-sm text-gray-600 mb-2">🔎 Busque ou filtre produtos</p>
   <div className="flex flex-col md:flex-row gap-3">
@@ -145,7 +143,7 @@ const abrirWhatsApp = (produto) => {
             </> ) : (
               <p className="text-green-600 font-bold">{formatarPreco(produto.preco)}</p>
           )}
-          {loja.funcionalidades.carrinho ? (
+          {loja?.features?.carrinho ? (
             <button
               className={`mt-3 bg-green-500 hover:bg-red-600 text-white py-2 rounded transition`}
               onClick={() => addItem(produto)}
@@ -160,7 +158,7 @@ const abrirWhatsApp = (produto) => {
               Falar no WhatsApp
             </button>
           )}
-            {loja.funcionalidades.carrinho && quantidade > 0 && (
+            {loja?.features?.carrinho && quantidade > 0 && (
               <small className="mt-1 text-gray-600">
                 🛒 {quantidade} no pedido
               </small>
@@ -176,4 +174,4 @@ const abrirWhatsApp = (produto) => {
   )
 }
 
-export default Catalogo
+export default ProdutosGrid
