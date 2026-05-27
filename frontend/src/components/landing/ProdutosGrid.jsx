@@ -118,7 +118,7 @@ const abrirWhatsApp = (produto) => {
 
       {produtosOrdenados.map(produto => {
         // evita calcular quantidade se não tiver carrinho
-      const quantidade = loja.funcionalidades.carrinho
+      const quantidade = loja.features.carrinho
         ? lista.filter(item => item._id === produto._id).length
         : 0
 

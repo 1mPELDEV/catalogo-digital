@@ -10,8 +10,32 @@ function Navbar() {
   const location = useLocation()
   const slug = location.pathname.split("/")[1] || null
 
-  const rotasInternas = ["admin", "login", "cadastro", "pedido"]
-  const slugDaLoja = rotasInternas.includes(slug) ? null : slug
+  const slugAtual =
+    location.pathname.split("/")[1] || null
+
+  const rotasInternas = [
+    "admin",
+    "login",
+    "cadastro",
+    "pedido"
+  ]
+
+  let slugDaLoja = null
+
+  if (
+    slugAtual &&
+    !rotasInternas.includes(slugAtual)
+  ) {
+    slugDaLoja = slugAtual
+
+    localStorage.setItem(
+      "slugLoja",
+      slugAtual
+    )
+  } else {
+    slugDaLoja =
+      localStorage.getItem("slugLoja")
+  }
 
   const loja = useLoja(slugDaLoja)
 

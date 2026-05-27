@@ -11,22 +11,16 @@ const criar = async () => {
 
   // 🔥 cria a loja primeiro
   const loja = await Loja.create({
-    nome: "Mercadinho do João",
-    tipo: "mercado",
-    tema: { corPrimaria: "#22c55e" },
+    nome: "mercadinho do juca",
+    slug:"mercadinho-juca",
+    tema: { corPrimaria: "#6b22f3" },
     contato: { whatsapp: "5574999999999" },
-    funcionalidades: { carrinho: true },
-    landing: {
-      titulo: "Ofertas do dia 🛒",
-      descricao: "Os melhores preços da cidade",
-      cta: "Comprar agora",
-      acao: "carrinho"
-    }
+    features: { catalogo:false, carrinho: true, pedidoWhatsapp: true },
   })
 
   // 🔥 cria admin ligado à loja
   await Admin.create({
-    email: "admin@email.com",
+    email: "mercadinhojuca@email.com",
     senha: hash,
     lojaId: loja._id
   })
