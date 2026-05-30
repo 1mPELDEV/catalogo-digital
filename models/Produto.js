@@ -1,55 +1,42 @@
 const mongoose = require("mongoose")
-const Schema = mongoose.Schema
 
-const Produtos = new Schema({
+const ProdutoSchema = new mongoose.Schema({
+
   nome: {
     type: String,
-    required: [true, "O nome é obrigatorio"],
-    trim: true
+    required: true
   },
-  adminId: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "Admin",
-  required: true
-  },
-  lojaId: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "Loja",
-  required: true
-  },
+
   preco: {
     type: Number,
-    required: [true, "O preço é obrigatório"],
-    min: [0, "O preço deve ser maior que 0"]
+    required: true
   },
-  descricao: {
-    type: String
+
+  descricao: String,
+
+  categoria: String,
+
+  imagem: String,
+
+  lojaId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Loja",
+    required: true
   },
-  imagem: {
-    type: String,
-    trim: true,
-    default: "https://picsum.photos/200"
-  },
-  data: {
-    type: Date,
-    default: Date.now
-  },
-    categoria: {
-    type: String,
-    required: true,
-    trim: true
-  },
+
   promocao: {
     ativa: {
       type: Boolean,
       default: false
     },
+
     desconto: {
       type: Number,
-      default: 0,
-      min: 0
-    }   
+      default: 0
+    }
   }
+
 })
 
-module.exports = mongoose.model("produtos", Produtos)
+module.exports =
+mongoose.model("Produto", ProdutoSchema)
