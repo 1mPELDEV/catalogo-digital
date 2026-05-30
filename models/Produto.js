@@ -12,6 +12,11 @@ const Produtos = new Schema({
   ref: "Admin",
   required: true
   },
+  lojaId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Loja",
+  required: true
+  },
   preco: {
     type: Number,
     required: [true, "O preço é obrigatório"],

@@ -26,6 +26,10 @@ app.use(cors({
 app.use(express.json())
 
 //Rotas
+const masterRoutes =
+require("./routes/master")
+app.use("/master", masterRoutes)
+
 const produtos = require('./routes/produtos')
 app.use("/produtos", produtos)
 

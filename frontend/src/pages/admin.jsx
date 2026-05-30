@@ -23,6 +23,10 @@ const [aba, setAba] = useState("produtos")
 
 const navigate = useNavigate()
 const token = localStorage.getItem("token")
+function exibeToken(){
+console.log(token)
+} 
+exibeToken()
 
 useEffect(() => {
   const token = localStorage.getItem("token")

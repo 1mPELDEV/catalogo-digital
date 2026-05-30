@@ -1,7 +1,11 @@
 const mongoose = require("mongoose")
-const Schema = mongoose.Schema
 
-const Admin = new Schema({
+const AdminSchema = new mongoose.Schema({
+
+  nome: {
+    type: String,
+    required: true
+  },
 
   email: {
     type: String,
@@ -14,14 +18,22 @@ const Admin = new Schema({
     required: true
   },
 
+  role: {
+    type: String,
+    enum: ["master", "lojista"],
+    default: "lojista"
+  },
+
   lojaId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Loja",
-    required: true
+    required: function () {
+      return this.role === "lojista"
+    }
   }
 
 })
 
 module.exports =
   mongoose.models.Admin ||
-  mongoose.model("Admin", Admin)
+  mongoose.model("Admin", AdminSchema)

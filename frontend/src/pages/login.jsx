@@ -15,21 +15,35 @@ function Login(){
         e.preventDefault()
 
         try{
-            const response = await axios.post("http://localhost:8082/admin/login" , {
+            const res = await axios.post("http://localhost:8082/admin/login" , {
                 email,
                 senha
             })
 
-            const token = response.data.token
+            const token = res.data.token
 
-            localStorage.setItem("token", token)
+            localStorage.setItem(
+            "token",
+            res.data.token
+            )
+
+            localStorage.setItem(
+            "slugLoja",
+            res.data.slug
+            )
+
             window.dispatchEvent(new Event("storage"))
+
+            if (res.data.role === "master") {
+            navigate("/master")
+            } else {
             navigate("/admin")
+            }
 
             alert("Login feito com sucesso!")
         } catch(err) {
-            console.log(err.response?.data)
-            alert("Erro no login")
+            console.log(err.res?.data)
+            alert("Erro no login 1")
         }
     }
     return(

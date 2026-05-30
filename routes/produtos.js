@@ -11,91 +11,96 @@ require('../middlewares/authMiddleware')
 // CREATE
 router.post('/', verificaToken, async (req, res) => {
 
-    try {
+  try {
 
-        const novoProduto = new Produto({
+    const novoProduto = new Produto({
 
-            nome: req.body.nome,
-            preco: req.body.preco,
-            descricao: req.body.descricao,
-            categoria: req.body.categoria,
-            imagem: req.body.imagem,
+      nome: req.body.nome,
+      preco: req.body.preco,
+      descricao: req.body.descricao,
+      categoria: req.body.categoria,
+      imagem: req.body.imagem,
 
-            adminId: req.adminId,
+      lojaId: req.admin.lojaId,
 
-            promocao: {
-                ativa: req.body.promocao?.ativa || false,
-                desconto: req.body.promocao?.desconto || 0
-            }
+      promocao: {
+        ativa: req.body.promocao?.ativa || false,
+        desconto: req.body.promocao?.desconto || 0
+      }
 
-        })
+    })
 
-        await novoProduto.save()
+    await novoProduto.save()
 
-        res.status(201).json(novoProduto)
+    res.status(201).json(novoProduto)
 
-    } catch (err) {
+  } catch (err) {
 
-        console.log(err)
+    console.log(err)
 
-        res.status(500).json({
-            erro: "Erro ao criar produto"
-        })
+    res.status(500).json({
+      erro: "Erro ao criar produto"
+    })
 
-    }
+  }
 
 })
 
+
+// PUBLICO → catálogo
 router.get('/:slug', async (req, res) => {
 
-    try {
+  try {
 
-        const loja = await Loja.findOne({
-            slug: req.params.slug
-        })
+    const loja = await Loja.findOne({
+      slug: req.params.slug
+    })
 
-        // loja não encontrada
-        if (!loja) {
-            return res.status(404).json({
-                erro: "Loja não encontrada"
-            })
-        }
-
-        const produtos = await Produto.find({
-            adminId: loja.adminId
-        })
-
-        res.json(produtos)
-
-    } catch (err) {
-
-        res.status(500).json({
-            erro: "Erro ao buscar produtos"
-        })
-
+    if (!loja) {
+      return res.status(404).json({
+        erro: "Loja não encontrada"
+      })
     }
+
+    const produtos = await Produto.find({
+      lojaId: loja._id
+    })
+
+    res.json(produtos)
+
+  } catch (err) {
+
+    console.log(err)
+
+    res.status(500).json({
+      erro: "Erro ao buscar produtos"
+    })
+
+  }
 
 })
 
 
-// READ
+// PRIVADO → admin
 router.get('/', verificaToken, async (req, res) => {
 
-    try {
+  try {
 
-        const produtos = await Produto.find({
-            adminId: req.adminId
-        })
+    const produtos = await Produto.find({
+      lojaId: req.admin.lojaId
+    })
 
-        res.json(produtos)
+    res.json(produtos)
 
-    } catch (err) {
+  } catch (err) {
 
-        res.status(500).json({
-            erro: "Erro ao buscar produtos"
-        })
+    console.log(err)
 
-    }
+    res.status(500).json({
+      erro: "Erro ao buscar produtos"
+    })
+
+  }
 
 })
 
@@ -103,31 +108,33 @@ router.get('/', verificaToken, async (req, res) => {
 // UPDATE
 router.put('/:id', verificaToken, async (req, res) => {
 
-    try {
+  try {
 
-        const produtoAtualizado =
-        await Produto.findOneAndUpdate(
+    const produtoAtualizado =
+      await Produto.findOneAndUpdate(
 
-            {
-                _id: req.params.id,
-                adminId: req.adminId
-            },
+        {
+          _id: req.params.id,
+          lojaId: req.admin.lojaId
+        },
 
-            req.body,
+        req.body,
 
-            { new: true }
+        { new: true }
 
-        )
+      )
 
-        res.json(produtoAtualizado)
+    res.json(produtoAtualizado)
 
-    } catch (err) {
+  } catch (err) {
 
-        res.status(500).json({
-            erro: "Erro ao atualizar produto"
-        })
+    console.log(err)
 
-    }
+    res.status(500).json({
+      erro: "Erro ao atualizar produto"
+    })
+
+  }
 
 })
 
@@ -135,26 +142,28 @@ router.put('/:id', verificaToken, async (req, res) => {
 // DELETE
 router.delete('/:id', verificaToken, async (req, res) => {
 
-    try {
+  try {
 
-        await Produto.findOneAndDelete({
+    await Produto.findOneAndDelete({
 
-            _id: req.params.id,
-            adminId: req.adminId
+      _id: req.params.id,
+      lojaId: req.admin.lojaId
 
-        })
+    })
 
-        res.json({
-            mensagem: "Produto deletado"
-        })
+    res.json({
+      mensagem: "Produto deletado"
+    })
 
-    } catch (err) {
+  } catch (err) {
 
-        res.status(500).json({
-            erro: "Erro ao deletar produto"
-        })
+    console.log(err)
 
-    }
+    res.status(500).json({
+      erro: "Erro ao deletar produto"
+    })
+
+  }
 
 })
 

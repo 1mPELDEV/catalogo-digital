@@ -1,32 +1,58 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 
-// slug → uso público (visitante no catálogo)
-// sem slug → uso privado (admin logado)
 export function useLoja(slug = null) {
+
   const [loja, setLoja] = useState(null)
 
   useEffect(() => {
+
     const buscarLoja = async () => {
+
       try {
+
+        // 🔥 rota pública
         if (slug) {
-          // rota pública — não precisa de token
-          const res = await axios.get(`http://localhost:8082/loja/${slug}`)
+
+          const res = await axios.get(
+            `http://localhost:8082/loja/${slug}`
+          )
+
           setLoja(res.data)
-        } else {
-          // rota privada — envia o token do admin logado
-          const token = localStorage.getItem("token")
-          const res = await axios.get("http://localhost:8082/loja", {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-          setLoja(res.data)
+          return
         }
+
+        // 🔥 rota privada (admin)
+        const token =
+          localStorage.getItem("token")
+
+        // não logado → não busca nada
+        if (!token) {
+          setLoja(null)
+          return
+        }
+
+        const res = await axios.get(
+          "http://localhost:8082/loja",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+
+        setLoja(res.data)
+
       } catch (err) {
-        console.log("Erro ao buscar loja:", err)
+        console.log(
+          "Erro ao buscar loja:",
+          err
+        )
       }
     }
 
     buscarLoja()
+
   }, [slug])
 
   return loja

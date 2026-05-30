@@ -1,34 +1,84 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation
+} from "react-router-dom"
 
 import Login from "./pages/login"
 import Admin from "./pages/admin"
-import Home from "./components/landing/ProdutosGrid.jsx"
 import Cadastro from "./pages/Cadastro"
 import Pedido from "./pages/Pedido"
 import Landing from "./pages/Landing"
-import RotaProtegida from "./components/RotaProtegida"
-import { loja } from "./config/loja"
+import Master from "./pages/Master"
+import Home from "./pages/Home"
 
-// components
 import Navbar from "./components/navbar"
+
+function Layout() {
+
+  const location = useLocation()
+
+  // páginas sem navbar
+  const ocultarNavbar = [
+    "/"
+  ]
+
+  const mostrarNavbar =
+    !ocultarNavbar.includes(
+      location.pathname
+    )
+
+  return (
+    <>
+      {mostrarNavbar && <Navbar />}
+
+      <Routes>
+        <Route
+          path="/"
+          element={<Home />}
+        />
+
+        <Route
+          path="/:slug"
+          element={<Landing />}
+        />
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/admin"
+          element={<Admin />}
+        />
+
+        <Route
+          path="/pedido"
+          element={<Pedido />}
+        />
+
+        <Route
+          path="/master"
+          element={<Master />}
+        />
+
+        <Route
+          path="/cadastro"
+          element={<Cadastro />}
+        />
+      </Routes>
+    </>
+  )
+}
 
 function App() {
   return (
-
     <BrowserRouter>
-      <Navbar />
-      <Routes>
-        <Route path="/:slug" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/pedido" element={<Pedido />}/>
-        <Route path="/cadastro" element={<Cadastro />} />
-      </Routes>
+      <Layout />
     </BrowserRouter>
   )
 }
 
 export default App
-
-
-

@@ -1,15 +1,15 @@
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { useLoja } from "../hooks/useLoja"
 
 function Navbar() {
-
   const [logado, setLogado] = useState(false)
   const [quantidade, setQuantidade] = useState(0)
 
   const location = useLocation()
-  const slug = location.pathname.split("/")[1] || null
+  const navigate = useNavigate()
 
+  // pega slug da URL
   const slugAtual =
     location.pathname.split("/")[1] || null
 
@@ -20,6 +20,7 @@ function Navbar() {
     "pedido"
   ]
 
+  // define slug da loja
   let slugDaLoja = null
 
   if (
@@ -27,7 +28,6 @@ function Navbar() {
     !rotasInternas.includes(slugAtual)
   ) {
     slugDaLoja = slugAtual
-
     localStorage.setItem(
       "slugLoja",
       slugAtual
@@ -39,80 +39,135 @@ function Navbar() {
 
   const loja = useLoja(slugDaLoja)
 
-  const corPrimaria = loja?.tema?.corPrimaria || "#22c55e"
+  const corPrimaria =
+    loja?.tema?.corPrimaria || "#22c55e"
 
+  // carrega infos iniciais
   useEffect(() => {
-    const atualizarCarrinho = () => {
-      const carrinho = JSON.parse(localStorage.getItem("lista")) || []
+    const token = localStorage.getItem("token")
+    setLogado(!!token)
+
+    const carrinho =
+      JSON.parse(localStorage.getItem("lista")) || []
+
+    setQuantidade(carrinho.length)
+  }, [])
+
+  // escuta mudanças
+  useEffect(() => {
+    const atualizar = () => {
+      const token =
+        localStorage.getItem("token")
+
+      setLogado(!!token)
+
+      const carrinho =
+        JSON.parse(localStorage.getItem("lista")) || []
+
       setQuantidade(carrinho.length)
     }
 
-    const verificarLogin = () => {
-      const token = localStorage.getItem("token")
-      setLogado(!!token)
-    }
-
-    atualizarCarrinho()
-    verificarLogin()
-
-    window.addEventListener("storage", atualizarCarrinho)
-    window.addEventListener("storage", verificarLogin)
+    window.addEventListener(
+      "storage",
+      atualizar
+    )
 
     return () => {
-      window.removeEventListener("storage", atualizarCarrinho)
-      window.removeEventListener("storage", verificarLogin)
+      window.removeEventListener(
+        "storage",
+        atualizar
+      )
     }
   }, [])
 
   const sair = () => {
     localStorage.removeItem("token")
+    localStorage.removeItem("slugLoja")
+
     setLogado(false)
+
+    navigate("/login")
   }
 
   return (
-    <nav className="text-white p-4 shadow-md" style={{ backgroundColor: corPrimaria }}>
-      <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <nav
+      className="text-white shadow-md"
+      style={{
+        backgroundColor: corPrimaria
+      }}
+    >
+      <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
 
+        {/* Logo + Nome */}
         <div className="flex items-center gap-3">
           {loja?.logo && (
-            <img src={loja.logo} alt={loja.nome} className="w-8 h-8 object-cover rounded-full" />
+            <img
+              src={loja.logo}
+              alt={loja.nome}
+              className="w-10 h-10 rounded-full object-cover border border-white"
+            />
           )}
-          <h1 className="text-lg md:text-xl font-bold">
-            {loja?.nome || ""}
+
+          <h1 className="text-xl font-bold">
+            {loja?.nome || "Seu Catálogo"}
           </h1>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 text-sm md:text-base">
+        {/* Links */}
+        <div className="flex items-center gap-4 text-sm md:text-base">
 
+          {/* catálogo */}
           {slugDaLoja && (
-            <Link to={`/${slugDaLoja}`} className="hover:opacity-80 transition">
+            <Link
+              to={`/${slugDaLoja}`}
+              className="hover:opacity-80 transition"
+            >
               Catálogo
             </Link>
           )}
 
-          {logado && (
-            <Link to="/admin" className="hover:opacity-80 transition">
-              Admin
-            </Link>
-          )}
+          {/* links privados */}
+          {logado ? (
+            <>
+              <Link
+                to="/admin"
+                className="hover:opacity-80 transition"
+              >
+                Admin
+              </Link>
 
-          <Link to="/pedido" className="hover:opacity-80 transition">
-            Pedido 🛒 ({quantidade})
-          </Link>
+              <Link
+                to="/pedido"
+                className="hover:opacity-80 transition"
+              >
+                Pedido 🛒 ({quantidade})
+              </Link>
 
-          {!logado ? (
-            <Link to="/login" className="bg-white px-3 py-1 rounded hover:bg-gray-100 transition" style={{ color: corPrimaria }}>
-              Login
-            </Link>
+              <button
+                onClick={sair}
+                className="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition"
+              >
+                Sair
+              </button>
+            </>
           ) : (
-            <button
-              onClick={sair}
-              className="bg-red-500 px-3 py-1 rounded hover:bg-red-600 transition"
-            >
-              Sair
-            </button>
-          )}
+            <>
+              <Link
+                to="/login"
+                className="bg-white px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition"
+                style={{ color: corPrimaria }}
+              >
+                Login
+              </Link>
 
+              <Link
+                to="/cadastro"
+                className="border border-white px-4 py-2 rounded-lg hover:bg-white/10 transition"
+              >
+                Criar loja
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
