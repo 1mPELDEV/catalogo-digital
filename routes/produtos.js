@@ -13,6 +13,11 @@ router.post('/', verificaToken, async (req, res) => {
 
   try {
 
+      if (!req.body.nome || !req.body.preco) {
+    return res.status(400).json({
+      erro: "Nome e preço são obrigatórios"
+    })
+  }
     const novoProduto = new Produto({
 
       nome: req.body.nome,
@@ -110,21 +115,23 @@ router.put('/:id', verificaToken, async (req, res) => {
 
   try {
 
-    const produtoAtualizado =
+      const produtoAtualizado =
       await Produto.findOneAndUpdate(
-
         {
           _id: req.params.id,
           lojaId: req.admin.lojaId
         },
-
         req.body,
-
         { new: true }
-
       )
 
-    res.json(produtoAtualizado)
+      if (!produtoAtualizado) {
+        return res.status(404).json({
+          erro: "Produto não encontrado"
+        })
+      }
+
+      res.json(produtoAtualizado)
 
   } catch (err) {
 
@@ -144,16 +151,21 @@ router.delete('/:id', verificaToken, async (req, res) => {
 
   try {
 
-    await Produto.findOneAndDelete({
+      const deletado =
+      await Produto.findOneAndDelete({
+        _id: req.params.id,
+        lojaId: req.admin.lojaId
+      })
 
-      _id: req.params.id,
-      lojaId: req.admin.lojaId
+      if (!deletado) {
+        return res.status(404).json({
+          erro: "Produto não encontrado"
+        })
+      }
 
-    })
-
-    res.json({
-      mensagem: "Produto deletado"
-    })
+      res.json({
+        mensagem: "Produto deletado"
+      })
 
   } catch (err) {
 

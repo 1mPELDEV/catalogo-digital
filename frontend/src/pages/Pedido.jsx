@@ -3,8 +3,16 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import ModalConfirmacao from '../components/modalConfirmacao'
 import formatarPreco from '../utils/formatarpreco'
+import { useParams } from "react-router-dom"
+
+
 
 function Pedido(){
+
+  const { slug } = useParams()
+  const chaveLocalStorage = `carrinho-${slug}`
+  const chaveNome = `nomeCliente-${slug}`
+  const chaveEndereco = `endereco-${slug}`
 
   const [lista, setLista] = useState([])
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
@@ -18,17 +26,17 @@ function Pedido(){
 
   useEffect(()=>{
 
-    const carrinhoSalvo = JSON.parse(localStorage.getItem("lista")) || []
+    const carrinhoSalvo = JSON.parse(localStorage.getItem(chaveLocalStorage)) || []
 
     if(carrinhoSalvo){
       setLista(carrinhoSalvo)
     }
 
-  },[])
+  },[slug])
 // salva os dados do cliente no local storage
   useEffect(() => {
-  const nomeSalvo = localStorage.getItem("nomeCliente")
-  const enderecoSalvo = localStorage.getItem("endereco")
+  const nomeSalvo = localStorage.getItem(chaveNome)
+  const enderecoSalvo = localStorage.getItem(chaveEndereco)
 
   if(nomeSalvo) setNomeCliente(nomeSalvo)
   if(enderecoSalvo) setEndereco(enderecoSalvo)
@@ -60,7 +68,7 @@ useEffect(() => {
   const removeItem = (id) => {
   const novaLista = lista.filter(produto => produto._id !== id)
   setLista(novaLista)
-  localStorage.setItem("lista", JSON.stringify(novaLista))
+  localStorage.setItem(chaveLocalStorage, JSON.stringify(novaLista))
   window.dispatchEvent(new Event("storage"))
   toast.success("Produto removido com sucesso!")
 }
@@ -68,7 +76,7 @@ useEffect(() => {
 
 const limparCarrinho = () =>{
   setLista([])
-  localStorage.removeItem("lista")
+  localStorage.removeItem(chaveLocalStorage)
   window.dispatchEvent(new Event("storage"))
   setMostrarConfirmacao(false)
 }
@@ -76,7 +84,7 @@ const limparCarrinho = () =>{
 const aumentar = (produto) => {
   const novaLista = [...lista, produto]
   setLista(novaLista)
-  localStorage.setItem("lista", JSON.stringify(novaLista))
+  localStorage.setItem(chaveLocalStorage, JSON.stringify(novaLista))
   window.dispatchEvent(new Event("storage"))
 }
 
@@ -86,7 +94,7 @@ const diminuir = (id) => {
   const novaLista = [...lista]
   novaLista.splice(index, 1)
   setLista(novaLista)
-  localStorage.setItem("lista", JSON.stringify(novaLista))
+  localStorage.setItem(chaveLocalStorage, JSON.stringify(novaLista))
   window.dispatchEvent(new Event("storage"))
 }
 

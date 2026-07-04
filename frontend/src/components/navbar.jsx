@@ -17,7 +17,8 @@ function Navbar() {
     "admin",
     "login",
     "cadastro",
-    "pedido"
+    "pedido",
+    "master"
   ]
 
   // define slug da loja
@@ -118,12 +119,22 @@ function Navbar() {
 
           {/* catálogo */}
           {slugDaLoja && (
+            <>
             <Link
               to={`/${slugDaLoja}`}
               className="hover:opacity-80 transition"
             >
               Catálogo
             </Link>
+
+              <Link
+                to={`/${slugDaLoja}/pedido`}
+                className="hover:opacity-80 transition"
+              >
+                Pedido 🛒 ({quantidade})
+              </Link>
+            </>
+            
           )}
 
           {/* links privados */}
@@ -136,13 +147,6 @@ function Navbar() {
                 Admin
               </Link>
 
-              <Link
-                to="/pedido"
-                className="hover:opacity-80 transition"
-              >
-                Pedido 🛒 ({quantidade})
-              </Link>
-
               <button
                 onClick={sair}
                 className="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition"
@@ -150,24 +154,10 @@ function Navbar() {
                 Sair
               </button>
             </>
-          ) : (
+          ) : 
             <>
-              <Link
-                to="/login"
-                className="bg-white px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition"
-                style={{ color: corPrimaria }}
-              >
-                Login
-              </Link>
-
-              <Link
-                to="/cadastro"
-                className="border border-white px-4 py-2 rounded-lg hover:bg-white/10 transition"
-              >
-                Criar loja
-              </Link>
             </>
-          )}
+          }
         </div>
       </div>
     </nav>

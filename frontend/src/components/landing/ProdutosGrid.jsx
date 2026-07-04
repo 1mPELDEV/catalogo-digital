@@ -11,6 +11,7 @@ function ProdutosGrid ({slug , loja}) {
   const [busca, setBusca] = useState("")
   const [categoriaSelecionada, setCategoriaSelecionada] = useState("")
 
+//faz a requisição para pegar os produtos da loja 
   const list = async () =>{
     try{
       const res = await axios.get(`http://localhost:8082/produtos/${slug}`)
@@ -20,6 +21,7 @@ function ProdutosGrid ({slug , loja}) {
     }
   }
 
+// apos mudar o slug ele vai atualizar a lista de produtos e o carrinho
   useEffect(()=>{
     list()
     const pedidoSalvo = JSON.parse(localStorage.getItem("lista"))
@@ -30,6 +32,7 @@ function ProdutosGrid ({slug , loja}) {
 
   }, [slug])
 
+//coloca um novo item na lista de produtos do carrinho e salva no localStorage
   const addItem = (produto) => {
 
     const precoFinal = produto.promocao?.ativa
@@ -48,7 +51,7 @@ function ProdutosGrid ({slug , loja}) {
     localStorage.setItem("lista", JSON.stringify(novaLista))
     window.dispatchEvent(new Event("storage"))
   }
-
+// busca e filtro de produtos
   const produtosFiltrados = produtos
   .filter(produto =>
     produto.nome.toLowerCase().includes(busca.toLowerCase())
@@ -65,6 +68,8 @@ function ProdutosGrid ({slug , loja}) {
 
   return bPromo - aPromo
 })
+
+// função para abrir no whatsapp quando o catalogo não tiver carrinho
 
 const abrirWhatsApp = (produto) => {
   const numero = loja?.contato?.whatsapp // depois deixa dinâmico
@@ -99,6 +104,7 @@ const abrirWhatsApp = (produto) => {
       onChange={(e) => setCategoriaSelecionada(e.target.value)}
       className="p-2 border rounded md:w-56 focus:outline-none focus:ring-2 focus:ring-green-400"
     >
+      {/* passa de forma  fixa o conteudo para a filtragem de categorias depois deixar dinamico */}
       <option value="">Todas</option>
       <option value="Bebidas">Bebidas</option>
       <option value="Alimentos">Alimentos</option>
@@ -108,22 +114,23 @@ const abrirWhatsApp = (produto) => {
 </div>
 
     <div className="text-center py-8">
-        <h1 className="text-2xl md:text-4xl font-bold">Ofertas da Semana 🔥</h1>
-        <p className="text-gray-600 mt-2">Os melhores produtos com o melhor preço</p>
+        <h1 className="text-2xl md:text-4xl font-bold">Catalogo digital 🔥</h1>
+        <p className="text-gray-600 mt-2">confira o nosso catálogo</p>
     </div>
 
     {produtosOrdenados.length === 0 ? (
       <p className="text-center text-gray-500 mt-6">Nenhum item bate com a busca 😕</p>)
       : (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
 
+      {/* mapeia os produtos ordenados e exibe na tela */}
       {produtosOrdenados.map(produto => {
-        // evita calcular quantidade se não tiver carrinho
+        // calcula quantidade e evita calcular quantidade (que exibe no card "x no pedido") se não tiver carrinho
       const quantidade = loja.features.carrinho
         ? lista.filter(item => item._id === produto._id).length
         : 0
 
       return (
-        <div className="bg-white rounded-lg shadow p-4 flex flex-col relative" key={produto._id}>
+        <div className="bg-red-100 rounded-lg shadow p-4 flex flex-col relative" key={produto._id}>
           {produto.promocao?.ativa && (
           <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded"> Promoção 🔥</span>
           )}

@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken")
 const Admin = require("../models/Admin")
 const Loja = require("../models/Loja")
 
-console.log("Auth router carregado")
+console.log("auth.js: Auth router carregado ")
 
 router.post("/register", async (req, res) => {
   try {
@@ -65,11 +65,12 @@ router.post("/register", async (req, res) => {
 
     })
 
-    console.log("LOJA CRIADA:", loja)
+    console.log("auth.js: LOJA CRIADA:", loja)
 
     // 2️⃣ cria admin ligado à loja
     const admin = await Admin.create({
 
+      nome: nomeLoja,
       email,
       senha: hash,
       lojaId: loja._id
@@ -97,7 +98,7 @@ router.post("/register", async (req, res) => {
 
   } catch (err) {
 
-    console.log("ERRO REGISTER:", err)
+    console.log("auth.js: ERRO REGISTER:", err)
 
     res.status(500).json({
       erro: "Erro no cadastro"

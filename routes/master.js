@@ -82,6 +82,7 @@ router.post("/lojas", async (req, res) => {
     // cria admin
     const admin =
       await Admin.create({
+        nome: nomeLoja,
         email,
         senha: hash,
         lojaId: loja._id

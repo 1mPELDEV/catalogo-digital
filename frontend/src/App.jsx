@@ -12,6 +12,7 @@ import Pedido from "./pages/Pedido"
 import Landing from "./pages/Landing"
 import Master from "./pages/Master"
 import Home from "./pages/Home"
+import Footer from "./components/Footer"
 
 import Navbar from "./components/navbar"
 
@@ -45,8 +46,18 @@ function Layout() {
         />
 
         <Route
+          path="/:slug/pedido"
+          element={<Pedido />}
+        />
+
+        <Route
           path="/login"
           element={<Login />}
+        />
+
+        <Route
+          path="/cadastro"
+          element={<Cadastro />}
         />
 
         <Route
@@ -55,20 +66,13 @@ function Layout() {
         />
 
         <Route
-          path="/pedido"
-          element={<Pedido />}
-        />
-
-        <Route
           path="/master"
           element={<Master />}
         />
 
-        <Route
-          path="/cadastro"
-          element={<Cadastro />}
-        />
       </Routes>
+
+      <Footer />
     </>
   )
 }

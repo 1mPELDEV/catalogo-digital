@@ -20,6 +20,7 @@ const criar = async () => {
 
   // 🔥 cria admin ligado à loja
   await Admin.create({
+    nome: "Maria",
     email: "farmaciamaria@email.com",
     senha: hash,
     lojaId: loja._id

@@ -48,6 +48,7 @@ export function useLoja(slug = null) {
           "Erro ao buscar loja:",
           err
         )
+        setLoja(null)
       }
     }
 

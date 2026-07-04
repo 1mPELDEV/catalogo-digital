@@ -23,10 +23,6 @@ const [aba, setAba] = useState("produtos")
 
 const navigate = useNavigate()
 const token = localStorage.getItem("token")
-function exibeToken(){
-console.log(token)
-} 
-exibeToken()
 
 useEffect(() => {
   const token = localStorage.getItem("token")
@@ -219,6 +215,14 @@ return (
                 <option value="Limpeza">Limpeza</option>
               </select>
 
+              <input 
+                type="text"
+                placeholder="Cadastrar categoria" 
+                // value={novaCategoria} 
+                // onChange={(e) => setNovaCategoria(e.target.value)} 
+                className="p-2 border rounded" />
+
+
               <input
                 type="text"
                 placeholder="URL da imagem"
@@ -271,7 +275,7 @@ return (
                   criarProduto()
                 }
               }}
-              className="mt-4 w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white p-2 rounded"
+              className="mt-4 w-full bg-green-500 hover:bg-green-600 text-white p-2 rounded"
             >
               {editandoId ? "Atualizar Produto" : "Criar Produto"}
             </button>
