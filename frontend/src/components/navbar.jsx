@@ -13,6 +13,11 @@ function Navbar() {
   const slugAtual =
     location.pathname.split("/")[1] || null
 
+  let exibeslug = function() {
+    console.log(slugAtual)
+  }
+  exibeslug()
+
   const rotasInternas = [
     "admin",
     "login",
@@ -22,23 +27,25 @@ function Navbar() {
   ]
 
   // define slug da loja
-  let slugDaLoja = null
+const isCatalog =
+  slugAtual &&
+  !rotasInternas.includes(slugAtual)
 
-  if (
-    slugAtual &&
-    !rotasInternas.includes(slugAtual)
-  ) {
-    slugDaLoja = slugAtual
-    localStorage.setItem(
-      "slugLoja",
-      slugAtual
-    )
-  } else {
-    slugDaLoja =
-      localStorage.getItem("slugLoja")
-  }
 
-  const loja = useLoja(slugDaLoja)
+const slugDaLoja = isCatalog 
+  ? slugAtual 
+  : null
+
+  console.log({
+  pathname: location.pathname,
+  slugAtual,
+  isCatalog,
+  slugDaLoja
+})
+
+
+const loja = useLoja(slugDaLoja)
+  console.log("loja", loja)
 
   const corPrimaria =
     loja?.tema?.corPrimaria || "#22c55e"

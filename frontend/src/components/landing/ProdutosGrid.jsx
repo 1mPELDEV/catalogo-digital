@@ -48,6 +48,8 @@ function ProdutosGrid ({slug , loja}) {
 
     setLista(novaLista)
     toast.success("Produto adicionado ao pedido!")
+
+    // adiciona lista ao local storage e dispara evento de storage para atualizar o carrinho
     localStorage.setItem("lista", JSON.stringify(novaLista))
     window.dispatchEvent(new Event("storage"))
   }
@@ -122,7 +124,8 @@ const abrirWhatsApp = (produto) => {
       <p className="text-center text-gray-500 mt-6">Nenhum item bate com a busca 😕</p>)
       : (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
 
-      {/* mapeia os produtos ordenados e exibe na tela */}
+      {/* mapeia os produtos ordenados e exibe na tela e passa "produto" como argumento nos elementos html */}
+      
       {produtosOrdenados.map(produto => {
         // calcula quantidade e evita calcular quantidade (que exibe no card "x no pedido") se não tiver carrinho
       const quantidade = loja.features.carrinho
