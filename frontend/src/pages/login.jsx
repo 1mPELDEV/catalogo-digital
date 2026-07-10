@@ -8,12 +8,18 @@ function Login() {
 
   const navigate = useNavigate();
 
- useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
+
+  if (token) {
+    if (role === "master") {
+      navigate("/master");
+    } else {
       navigate("/admin");
     }
- }, []);
+  }
+}, []);
 
   async function fazerLogin(e) {
     e.preventDefault();
@@ -26,8 +32,12 @@ function Login() {
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("slugLoja", res.data.slug);
+      localStorage.setItem("role", res.data.role);
 
       window.dispatchEvent(new Event("storage"));
+
+      
+      alert(`Login feito com sucesso!${res.data.slug}`);
 
       if (res.data.role === "master") {
         navigate("/master");
@@ -35,7 +45,8 @@ function Login() {
         navigate("/admin");
       }
 
-      alert("Login feito com sucesso!");
+      return res.data;
+
     } catch (err) {
       console.log(err.response?.data);
       alert("Erro no login");

@@ -13,8 +13,9 @@ import Landing from "./pages/Landing"
 import Master from "./pages/Master"
 import Home from "./pages/Home"
 import Footer from "./components/Footer"
-
 import Navbar from "./components/navbar"
+
+import RotaProtegida from "./components/RotaProtegida"
 
 function Layout() {
 
@@ -62,12 +63,25 @@ function Layout() {
 
         <Route
           path="/admin"
-          element={<Admin />}
+          element={
+            <RotaProtegida 
+              permitido={!!localStorage.getItem("token")}
+            >
+              <Admin />
+            </RotaProtegida>
+          }
         />
 
         <Route
           path="/master"
-          element={<Master />}
+          element={
+            <RotaProtegida 
+              permitido={!!localStorage.getItem("token")}
+              rolePermitida="master"
+            >
+              <Master />
+            </RotaProtegida>
+          }
         />
 
       </Routes>

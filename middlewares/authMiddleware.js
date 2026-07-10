@@ -12,6 +12,12 @@ function verificaToken(req, res, next) {
 
   const token = authHeader.split(" ")[1]
 
+  if (!token) {
+    return res.status(401).json({
+      erro: "Token não fornecido"
+    })
+  }
+
   try {
 
     const decoded = jwt.verify(
@@ -26,7 +32,7 @@ function verificaToken(req, res, next) {
   } catch (err) {
 
     return res.status(401).json({
-      erro: "Token inválido"
+      erro: "Token inválido ou expirado"
     })
 
   }

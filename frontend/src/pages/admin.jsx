@@ -4,7 +4,6 @@ import axios from "axios"
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import ModalConfirmacao from '../components/modalConfirmacao'
-import ConfigLoja from './ConfigLoja'
 
 function Admin() {
 const [produtos, setProdutos] = useState([])
@@ -170,10 +169,7 @@ return (
       <div className="flex gap-4 mb-6">
         <button onClick={() => setAba("produtos")}>
           Produtos
-        </button>
-        <button onClick={() => setAba("loja")}>
-          Configurações
-        </button>
+        </button> 
       </div>
 
       <hr className="mb-6"/>
@@ -347,10 +343,6 @@ return (
             ))}
           </div>
         </>
-      )}
-
-      {aba === "loja" && (
-        <ConfigLoja />
       )}
 
     </div>

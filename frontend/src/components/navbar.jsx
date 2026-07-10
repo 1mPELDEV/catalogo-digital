@@ -26,25 +26,23 @@ function Navbar() {
     "master"
   ]
 
-  // define slug da loja
-const isCatalog =
-  slugAtual &&
-  !rotasInternas.includes(slugAtual)
+// const isCatalog = slugAtual && !rotasInternas.includes(slugAtual)
+
+  let slugDaLoja =  null 
 
 
-const slugDaLoja = isCatalog 
-  ? slugAtual 
-  : null
-
-  console.log({
-  pathname: location.pathname,
-  slugAtual,
-  isCatalog,
-  slugDaLoja
-})
+    if (slugAtual && !rotasInternas.includes(slugAtual)) {
+      slugDaLoja = slugAtual
+    } else {
+      slugDaLoja = localStorage.getItem("slugLoja")
+    }
 
 
 const loja = useLoja(slugDaLoja)
+
+console.log(localStorage.getItem("token"))
+
+  // loja tá vindo null porque slug atual tá sendo "admin" e não o slug da loja, então useLoja não consegue encontrar a loja correta.
   console.log("loja", loja)
 
   const corPrimaria =
