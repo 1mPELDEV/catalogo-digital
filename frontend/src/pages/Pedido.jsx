@@ -33,19 +33,36 @@ function Pedido(){
     }
 
   },[slug])
+
 // salva os dados do cliente no local storage
-  useEffect(() => {
-  const nomeSalvo = localStorage.getItem(chaveNome)
-  const enderecoSalvo = localStorage.getItem(chaveEndereco)
+    useEffect(() => {
 
-  if(nomeSalvo) setNomeCliente(nomeSalvo)
-  if(enderecoSalvo) setEndereco(enderecoSalvo)
-}, [])
+      const nomeSalvo =
+        localStorage.getItem(chaveNome)
 
-useEffect(() => {
-  localStorage.setItem("nomeCliente", nomeCliente)
-  localStorage.setItem("endereco", endereco)
-}, [nomeCliente, endereco])
+      const enderecoSalvo =
+        localStorage.getItem(chaveEndereco)
+
+
+      setNomeCliente(nomeSalvo || "")
+      setEndereco(enderecoSalvo || "")
+
+
+    }, [slug])
+
+    useEffect(() => {
+
+      localStorage.setItem(
+        chaveNome,
+        nomeCliente
+      )
+
+      localStorage.setItem(
+        chaveEndereco,
+        endereco
+      )
+
+    }, [nomeCliente, endereco])
 
   const itensAgrupados = useMemo(() => {
   return Object.values(

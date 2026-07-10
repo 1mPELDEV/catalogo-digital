@@ -6,6 +6,8 @@ import formatarPreco from "../../utils/formatarpreco"
 
 function ProdutosGrid ({slug , loja}) {
 
+  const chaveLocalStorage = `carrinho-${slug}`
+
   const [produtos , setProdutos] = useState([])
   const [lista, setLista] = useState([])
   const [busca, setBusca] = useState("")
@@ -22,36 +24,44 @@ function ProdutosGrid ({slug , loja}) {
   }
 
 // apos mudar o slug ele vai atualizar a lista de produtos e o carrinho
-  useEffect(()=>{
-    list()
-    const pedidoSalvo = JSON.parse(localStorage.getItem("lista"))
+    useEffect(()=>{
 
-    if(pedidoSalvo){
-    setLista(pedidoSalvo)
-  }
+      list()
 
-  }, [slug])
+      const pedidoSalvo = 
+        JSON.parse(localStorage.getItem(chaveLocalStorage)) || []
+
+      setLista(pedidoSalvo)
+
+    }, [slug])
 
 //coloca um novo item na lista de produtos do carrinho e salva no localStorage
   const addItem = (produto) => {
 
-    const precoFinal = produto.promocao?.ativa
-      ? produto.preco - produto.promocao.desconto
-      : produto.preco
+      const precoFinal = produto.promocao?.ativa
+        ? produto.preco - produto.promocao.desconto
+        : produto.preco
 
-    const produtoComPreco = {
-      ...produto,
-      precoFinal
-    }
-    console.log(produtoComPreco)
-    const novaLista = [...lista, produtoComPreco]
+      const produtoComPreco = {
+        ...produto,
+        precoFinal
+      }
 
-    setLista(novaLista)
-    toast.success("Produto adicionado ao pedido!")
+      const novaLista = [
+        ...lista,
+        produtoComPreco
+      ]
 
-    // adiciona lista ao local storage e dispara evento de storage para atualizar o carrinho
-    localStorage.setItem("lista", JSON.stringify(novaLista))
-    window.dispatchEvent(new Event("storage"))
+      setLista(novaLista)
+
+      toast.success("Produto adicionado ao pedido!")
+
+      localStorage.setItem(
+        chaveLocalStorage,
+        JSON.stringify(novaLista)
+      )
+
+      window.dispatchEvent(new Event("storage"))
   }
 // busca e filtro de produtos
   const produtosFiltrados = produtos

@@ -53,8 +53,10 @@ console.log(localStorage.getItem("token"))
     const token = localStorage.getItem("token")
     setLogado(!!token)
 
-    const carrinho =
-      JSON.parse(localStorage.getItem("lista")) || []
+    const carrinho = JSON.parse(
+      localStorage.getItem(`carrinho-${slugDaLoja}`)) || []
+
+      console.log("carrinho", carrinho)
 
     setQuantidade(carrinho.length)
   }, [])
@@ -68,7 +70,9 @@ console.log(localStorage.getItem("token"))
       setLogado(!!token)
 
       const carrinho =
-        JSON.parse(localStorage.getItem("lista")) || []
+      JSON.parse(
+        localStorage.getItem(`carrinho-${slugDaLoja}`)
+      ) || []
 
       setQuantidade(carrinho.length)
     }

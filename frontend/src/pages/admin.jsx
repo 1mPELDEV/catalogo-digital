@@ -169,7 +169,7 @@ return (
       <div className="flex gap-4 mb-6">
         <button onClick={() => setAba("produtos")}>
           Produtos
-        </button> 
+        </button>
       </div>
 
       <hr className="mb-6"/>

@@ -6,6 +6,7 @@ function Cadastro() {
   const [nomeLoja, setNomeLoja] = useState("")
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
+  const [logo, setLogo] = useState(null)
 
   const navigate = useNavigate()
 
@@ -21,7 +22,7 @@ function Cadastro() {
 
       localStorage.setItem("token", res.data.token)
 
-      alert("Conta criada com sucesso!")
+      alert("Loja criada com sucesso!")
 
       navigate("/admin")
     } catch (err) {
@@ -64,6 +65,14 @@ function Cadastro() {
           onChange={(e) => setSenha(e.target.value)}
           className="w-full mb-4 p-2 border rounded"
           required
+        />
+
+        <input
+          type="text"
+          placeholder="Logo"
+          value={logo}
+          onChange={(e) => setLogo(e.target.value)}
+          className="w-full mb-4 p-2 border rounded"
         />
 
         <button
