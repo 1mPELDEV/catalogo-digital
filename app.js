@@ -25,6 +25,12 @@ app.use(cors({
 //Middleweres
 app.use(express.json())
 
+// Rota para servir arquivos estáticos da pasta "uploads"
+app.use(
+ "/uploads",
+ express.static("uploads")
+)
+
 //Rotas
 const masterRoutes =
 require("./routes/master")

@@ -112,7 +112,7 @@ console.log(localStorage.getItem("token"))
         <div className="flex items-center gap-3">
           {loja?.logo && (
             <img
-              src={loja.logo}
+              src={`http://localhost:8082/uploads/${loja.logo}`}
               alt={loja.nome}
               className="w-10 h-10 rounded-full object-cover border border-white"
             />

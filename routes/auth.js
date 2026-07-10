@@ -6,12 +6,14 @@ const jwt = require("jsonwebtoken")
 const Admin = require("../models/Admin")
 const Loja = require("../models/Loja")
 
+const upload = require("../config/multer")
+
 console.log("auth.js: Auth router carregado ")
 
-router.post("/register", async (req, res) => {
+router.post("/register", upload.single("logo"), async (req, res) => {
   try {
 
-    const { nomeLoja, email, senha } = req.body
+    const { nomeLoja, email, senha, whatsapp, corPrimaria} = req.body
 
     // email já existe?
     const existe = await Admin.findOne({ email })
@@ -49,12 +51,16 @@ router.post("/register", async (req, res) => {
 
       slug,
 
+      logo: req.file 
+        ? `/uploads/${req.file.filename}`
+        : null,
+
       tema: {
-        corPrimaria: "#22c55e"
+        corPrimaria: corPrimaria || "#22c55e"
       },
 
       contato: {
-        whatsapp: ""
+        whatsapp: whatsapp || ""
       },
 
       features: {
