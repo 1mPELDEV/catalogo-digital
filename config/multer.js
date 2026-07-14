@@ -1,26 +1,25 @@
 const multer = require("multer")
+const { CloudinaryStorage } = require("multer-storage-cloudinary")
+const cloudinary = require("cloudinary").v2
 
-const storage = multer.diskStorage({
-
-  destination: function(req, file, cb){
-    cb(null, "uploads/")
-  },
-
-  filename: function(req, file, cb){
-
-    const nomeArquivo =
-      Date.now() + "-" + file.originalname
-
-    cb(null, nomeArquivo)
-
-  }
-
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 })
 
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "zipadao-logos",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    transformation: [{ width: 300, height: 300, crop: "limit" }]
+  }
+})
 
 const upload = multer({
-  storage
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }
 })
-
 
 module.exports = upload

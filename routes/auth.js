@@ -51,8 +51,8 @@ router.post("/register", upload.single("logo"), async (req, res) => {
 
       slug,
 
-      logo: req.file 
-        ? `/uploads/${req.file.filename}`
+      logo: req.file
+        ? req.file.path
         : null,
 
       tema: {
