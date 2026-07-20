@@ -2,6 +2,8 @@ import { useState } from "react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
 
+const API_URL = import.meta.env.VITE_API_URL
+
 function Cadastro() {
   const [nomeLoja, setNomeLoja] = useState("")
   const [email, setEmail] = useState("")
@@ -33,7 +35,7 @@ function Cadastro() {
 
 
       const res = await axios.post(
-        "http://localhost:8082/auth/register",
+        `${API_URL}/auth/register`,
         formData,
         {
           headers:{

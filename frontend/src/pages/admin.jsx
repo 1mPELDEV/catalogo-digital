@@ -5,6 +5,8 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import ModalConfirmacao from '../components/modalConfirmacao'
 
+const API_URL = import.meta.env.VITE_API_URL
+
 function Admin() {
 const [produtos, setProdutos] = useState([])
 const [nome, setNome] = useState('')
@@ -33,7 +35,7 @@ useEffect(() => {
 const buscarProdutos = async () => {
   try {
     setLoading(true)
-    const res = await axios.get('http://localhost:8082/produtos', {
+    const res = await axios.get(`${API_URL}/produtos`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     setProdutos(res.data)
@@ -73,7 +75,7 @@ const criarProduto = () => {
     return
   }
 
-  axios.post('http://localhost:8082/produtos', {
+  axios.post(`${API_URL}/produtos`, {
     nome,
     preco: Number(preco),
     descricao,
@@ -104,7 +106,7 @@ const criarProduto = () => {
 const deletarProduto = async () => {
   if(!produtoSelecionado) return
   try {
-    await axios.delete(`http://localhost:8082/produtos/${produtoSelecionado._id}`, {
+    await axios.delete(`${API_URL}/produtos/${produtoSelecionado._id}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     toast.success("Produto deletado com sucesso!")
@@ -127,7 +129,7 @@ const atualizarProduto = (id) => {
     return
   }
 
-  axios.put(`http://localhost:8082/produtos/${id}`, {
+  axios.put(`${API_URL}/produtos/${id}`, {
     nome,
     preco: Number(preco),
     descricao,

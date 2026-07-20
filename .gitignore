@@ -42,3 +42,6 @@ coverage/
 # Arquivos de lock opcionais (depende do projeto)
 # package-lock.json
 # yarn.lock
+
+# Uploads locais
+uploads/

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 
+const API_URL = import.meta.env.VITE_API_URL
+
 export function useLoja(slug = null) {
 
   const [loja, setLoja] = useState(null)
@@ -11,43 +13,29 @@ export function useLoja(slug = null) {
 
       try {
 
-        // 🔥 rota pública
         if (slug) {
-
-          const res = await axios.get(
-            `http://localhost:8082/loja/${slug}`
-          )
-
+          const res = await axios.get(`${API_URL}/loja/${slug}`)
           setLoja(res.data)
           return
         }
 
-        // 🔥 rota privada (admin)
-        const token =
-          localStorage.getItem("token")
+        const token = localStorage.getItem("token")
 
-        // não logado → não busca nada
         if (!token) {
           setLoja(null)
           return
         }
 
-        const res = await axios.get(
-          "http://localhost:8082/loja",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
+        const res = await axios.get(`${API_URL}/loja`, {
+          headers: {
+            Authorization: `Bearer ${token}`
           }
-        )
+        })
 
         setLoja(res.data)
 
       } catch (err) {
-        console.log(
-          "Erro ao buscar loja:",
-          err
-        )
+        console.log("Erro ao buscar loja:", err)
         setLoja(null)
       }
     }

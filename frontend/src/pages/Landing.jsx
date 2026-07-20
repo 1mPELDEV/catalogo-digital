@@ -5,6 +5,8 @@ import axios from "axios"
 import Hero from "../components/landing/Hero"
 import ProdutosGrid from "../components/landing/ProdutosGrid"
 
+const API_URL = import.meta.env.VITE_API_URL
+
 function Landing() {
 
   const { slug } = useParams()
@@ -15,7 +17,7 @@ function Landing() {
       const buscarLoja = async () => {
           try { 
                       const res = await axios.get(
-              `http://localhost:8082/loja/${slug}`
+              `${API_URL}/loja/${slug}`
             )
 
             setLoja(res.data)

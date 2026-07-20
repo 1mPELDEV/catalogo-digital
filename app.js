@@ -8,7 +8,7 @@ const app = express()
 
     // importanto mongoose
 const mongoose = require('mongoose')
-    mongoose.connect("mongodb://127.0.0.1:27017/db-catalogo")
+    mongoose.connect(process.env.MONGODB_URI)
     mongoose.connection.on("connected", () => {
         console.log("MongoDB conectado")
     })
