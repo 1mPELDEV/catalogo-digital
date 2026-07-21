@@ -1,6 +1,9 @@
 //importações
     //importando dotenv
-    require("dotenv").config()
+    
+   if (process.env.NODE_ENV !== 'production') {
+  require("dotenv").config()
+}
 
     //importando express
 const express = require('express')
