@@ -18,7 +18,7 @@ const mongoose = require('mongoose')
     // importando cors
 const cors = require('cors')
 app.use(cors({
-  origin: "http://localhost:5173"
+  origin: process.env.FRONTEND_URL || "http://localhost:5173"
 }))
 
 
@@ -56,6 +56,6 @@ app.get('/',(req,res)=>{
 
 
 //Configurações de servidor
-app.listen(8082, () => {
-    console.log("Servidor rodando na porta 8082")
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`)
 })
