@@ -54,8 +54,8 @@ app.get('/',(req,res)=>{
 })
 
 
-
-//Configurações de servidor
+// configurando porta
+const PORT = process.env.PORT || 8082
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`)
+  console.log(`Servidor rodando na porta ${PORT}`)
 })
