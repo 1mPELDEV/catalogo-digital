@@ -75,13 +75,13 @@ function LandingPage() {
         <div style={{ flex: "1 1 440px", minWidth: 0 }}>
           <div className="tag" style={{ marginBottom: 24 }}>
             <span className="tag-dot"></span>
-            100% gratuito para começar
+            Para pequenos negócios
           </div>
           <h1 style={{ fontSize: "clamp(36px, 5vw, 58px)", fontWeight: 600, lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 20, color: "#0f0f0f" }}>
             Seu catálogo<br />online em minutos.
           </h1>
           <p style={{ fontSize: 18, color: "#666", lineHeight: 1.7, marginBottom: 36, maxWidth: 480 }}>
-            Monte sua loja digital, cadastre produtos e receba pedidos direto no WhatsApp. Sem mensalidade, sem complicação.
+            Monte seu catálogo digital, cadastre produtos e receba pedidos direto no WhatsApp. Sem mensalidade, sem complicação.
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <Link to="/cadastro" className="btn-primary">
