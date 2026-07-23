@@ -4,6 +4,9 @@ import 'react-toastify/dist/ReactToastify.css'
 import ModalConfirmacao from '../components/modalConfirmacao'
 import formatarPreco from '../utils/formatarpreco'
 import { useParams } from "react-router-dom"
+import useLoja from "../hooks/useLoja"
+
+const API_URL = import.meta.env.VITE_API_URL
 
 
 
@@ -24,9 +27,11 @@ function Pedido(){
   const [nomeCliente, setNomeCliente] = useState("")
   const [endereco, setEndereco] = useState("")
 
+  const { loja } = useLoja(slug)
+
   useEffect(()=>{
 
-    const carrinhoSalvo = JSON.parse(localStorage.getItem(chaveLocalStorage)) || []
+    const carrinhoSalvo = JSON.parse(localStorage.getItem(chaveLocalStorage)) || []  
 
     if(carrinhoSalvo){
       setLista(carrinhoSalvo)
@@ -142,7 +147,7 @@ const diminuir = (id) => {
 
     mensagem += `\n💰 Total: R$ ${formatarPreco(total)}`
 
-    const numero = "5574999105013"
+    const numero = loja?.contato?.whatsapp || "99999999" 
 
     const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
 
