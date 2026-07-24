@@ -4,7 +4,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import ModalConfirmacao from '../components/modalConfirmacao'
 import formatarPreco from '../utils/formatarpreco'
 import { useParams } from "react-router-dom"
-import useLoja from "../hooks/useLoja"
+import { useLoja } from "../hooks/useLoja"
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -27,7 +27,7 @@ function Pedido(){
   const [nomeCliente, setNomeCliente] = useState("")
   const [endereco, setEndereco] = useState("")
 
-  const { loja } = useLoja(slug)
+  const  loja  = useLoja(slug)
 
   useEffect(()=>{
 
@@ -147,7 +147,12 @@ const diminuir = (id) => {
 
     mensagem += `\n💰 Total: R$ ${formatarPreco(total)}`
 
-    const numero = loja?.contato?.whatsapp || "99999999" 
+    const numero = loja?.contato?.whatsapp
+
+      if (!numero) {
+        toast.error("Esta loja ainda não configurou o WhatsApp!")
+        return
+      } 
 
     const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
 
