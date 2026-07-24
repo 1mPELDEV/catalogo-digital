@@ -1,368 +1,281 @@
-import { useEffect , useState} from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from "axios"
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import ModalConfirmacao from '../components/modalConfirmacao'
+import { Package, Plus, Pencil, Trash2, Tag, Store, LogOut, ChevronRight } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL
 
 function Admin() {
-const [produtos, setProdutos] = useState([])
-const [nome, setNome] = useState('')
-const [preco, setPreco] = useState('')
-const [imagem, setImagem] = useState('')
-const [descricao, setDescricao] = useState('')
-const [editandoId , setEditandoId] = useState(null)
-const [loading, setLoading] = useState(false)
-const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false)
-const [produtoSelecionado, setProdutoSelecionado] = useState(null)
-const [promocao, setPromocao] = useState(false)
-const [desconto, setDesconto] = useState(0)
-const [categoria, setCategoria] = useState("")
-const [aba, setAba] = useState("produtos")
+  const [produtos, setProdutos] = useState([])
+  const [nome, setNome] = useState('')
+  const [preco, setPreco] = useState('')
+  const [imagem, setImagem] = useState('')
+  const [descricao, setDescricao] = useState('')
+  const [editandoId, setEditandoId] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false)
+  const [produtoSelecionado, setProdutoSelecionado] = useState(null)
+  const [promocao, setPromocao] = useState(false)
+  const [desconto, setDesconto] = useState(0)
+  const [categoria, setCategoria] = useState("")
+  const [mostrarForm, setMostrarForm] = useState(false)
 
-const navigate = useNavigate()
-const token = localStorage.getItem("token")
-
-useEffect(() => {
+  const navigate = useNavigate()
   const token = localStorage.getItem("token")
-  if(!token){
+
+  useEffect(() => {
+    if (!token) navigate("/")
+  }, [])
+
+  const buscarProdutos = async () => {
+    try {
+      setLoading(true)
+      const res = await axios.get(`${API_URL}/produtos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setProdutos(res.data)
+      return res.data
+    } catch (err) {
+      toast.error("Erro ao buscar produtos")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const carregar = async () => {
+      const dados = await buscarProdutos()
+      if (dados) {
+        toast.info(`👋 Bem vindo(a)! Você tem ${dados.length} produtos cadastrados.`, { autoClose: 4000 })
+      }
+    }
+    carregar()
+  }, [])
+
+  const limparForm = () => {
+    setNome(''); setPreco(''); setDescricao(''); setImagem('')
+    setCategoria(''); setDesconto(0); setPromocao(false); setEditandoId(null)
+    setMostrarForm(false)
+  }
+
+  const criarProduto = () => {
+    if (!nome.trim()) return toast.warning("O nome não pode ficar vazio!")
+    if (!preco || preco <= 0) return toast.warning("O preço deve ser maior que 0!")
+    if (!categoria) return toast.warning("Selecione uma categoria!")
+
+    axios.post(`${API_URL}/produtos`, {
+      nome, preco: Number(preco), descricao, categoria, imagem,
+      promocao: { ativa: promocao, desconto }
+    }, { headers: { Authorization: `Bearer ${token}` } })
+      .then(() => { limparForm(); toast.success("Produto criado!"); buscarProdutos() })
+      .catch(() => toast.error("Erro ao criar produto"))
+  }
+
+  const atualizarProduto = (id) => {
+    if (!nome.trim()) return toast.warning("O nome não pode ficar vazio!")
+    if (!preco || preco <= 0) return toast.warning("O preço deve ser maior que 0!")
+
+    axios.put(`${API_URL}/produtos/${id}`, {
+      nome, preco: Number(preco), descricao, categoria, imagem,
+      promocao: { ativa: promocao, desconto }
+    }, { headers: { Authorization: `Bearer ${token}` } })
+      .then(() => { limparForm(); toast.success("Produto atualizado!"); buscarProdutos() })
+      .catch(() => toast.error("Erro ao atualizar produto"))
+  }
+
+  const deletarProduto = async () => {
+    if (!produtoSelecionado) return
+    try {
+      await axios.delete(`${API_URL}/produtos/${produtoSelecionado._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      toast.success("Produto deletado!")
+      setMostrarConfirmacao(false)
+      setProdutoSelecionado(null)
+      buscarProdutos()
+    } catch {
+      toast.error("Erro ao deletar produto")
+    }
+  }
+
+  const editarProduto = (produto) => {
+    setNome(produto.nome)
+    setPreco(produto.preco)
+    setDescricao(produto.descricao || '')
+    setImagem(produto.imagem || '')
+    setEditandoId(produto._id)
+    setCategoria(produto.categoria || "")
+    setDesconto(produto.promocao?.desconto || 0)
+    setPromocao(produto.promocao?.ativa || false)
+    setMostrarForm(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const sair = () => {
+    localStorage.removeItem("token")
     navigate("/")
   }
-}, [])
 
-const buscarProdutos = async () => {
-  try {
-    setLoading(true)
-    const res = await axios.get(`${API_URL}/produtos`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    setProdutos(res.data)
-    return res.data
-  } catch (err){
-    console.log(err)
-    toast.error("Erro ao buscar produto")
-  } finally {
-    setLoading(false)
-  }
-}
+  return (
+    <>
+      <ToastContainer />
 
-useEffect(() => {
-  const carregar = async () => {
-    const dados = await buscarProdutos()
-    if (dados) {
-      toast.info(
-        `👋 Bem vindo(a)! Você tem ${dados.length} produtos cadastrados.`,
-        { autoClose: 4000 }
-      )
-    }
-  }
-  carregar()
-}, [])
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        * { box-sizing: border-box; }
+        .admin-input { width: 100%; padding: 10px 14px; border: 1.5px solid #e2e2e2; border-radius: 10px; font-size: 14px; font-family: inherit; color: #0f0f0f; outline: none; transition: border-color 0.15s; background: #fff; }
+        .admin-input:focus { border-color: #0f0f0f; }
+        .btn-dark { background: #0f0f0f; color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background 0.15s; font-family: inherit; }
+        .btn-dark:hover { background: #333; }
+        .btn-outline { background: transparent; color: #0f0f0f; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; border: 1.5px solid #e2e2e2; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.15s; font-family: inherit; }
+        .btn-outline:hover { border-color: #aaa; background: #fafafa; }
+        .btn-danger { background: transparent; color: #dc2626; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; border: 1.5px solid #fecaca; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; font-family: inherit; }
+        .btn-danger:hover { background: #fef2f2; border-color: #dc2626; }
+        .card { background: #fff; border: 1px solid #f0f0f0; border-radius: 16px; }
+        .produto-card { background: #fff; border: 1px solid #f0f0f0; border-radius: 14px; overflow: hidden; transition: box-shadow 0.15s; }
+        .produto-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .badge { display: inline-flex; align-items: center; gap: 4px; background: #fef9c3; border: 1px solid #fde047; color: #854d0e; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 999px; }
+        .categoria-badge { display: inline-flex; align-items: center; gap: 4px; background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 999px; }
+      `}</style>
 
-const criarProduto = () => {
-  if(!nome.trim()){
-    toast.warning("O Nome não pode ficar vazio!")
-    return
-  }
-  if(!preco || preco <= 0){
-    toast.warning("O preço deve ser maior do que 0!")
-    return
-  }
-  if(!categoria){
-    toast.warning("Selecione uma categoria!")
-    return
-  }
+      <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: "#f8f8f8", minHeight: "100vh" }}>
 
-  axios.post(`${API_URL}/produtos`, {
-    nome,
-    preco: Number(preco),
-    descricao,
-    categoria,
-    imagem,
-    promocao: {
-      ativa: promocao,
-      desconto: desconto
-    }
-  }, { headers: { Authorization: `Bearer ${token}` } })
-  .then(() => {
-    setNome('')
-    setDescricao('')
-    setImagem('')
-    setPreco('')
-    setCategoria('')
-    setDesconto(0)
-    setPromocao(false)
-    toast.success("Criado com sucesso!")
-    buscarProdutos()
-  })
-  .catch((err) => {
-    toast.error("Erro ao criar produto")
-    console.log(err)
-  })
-}
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
 
-const deletarProduto = async () => {
-  if(!produtoSelecionado) return
-  try {
-    await axios.delete(`${API_URL}/produtos/${produtoSelecionado._id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    toast.success("Produto deletado com sucesso!")
-    setMostrarConfirmacao(false)
-    setProdutoSelecionado(null)
-    buscarProdutos()
-  } catch (err) {
-    toast.error("Erro ao deletar produto")
-    console.log(err)
-  }
-}
-
-const atualizarProduto = (id) => {
-  if(!nome.trim()){
-    toast.warning("O Nome não pode ficar vazio!")
-    return
-  }
-  if(!preco || preco <= 0){
-    toast.warning("O preço deve ser maior do que 0!")
-    return
-  }
-
-  axios.put(`${API_URL}/produtos/${id}`, {
-    nome,
-    preco: Number(preco),
-    descricao,
-    categoria,
-    imagem,
-    promocao: {
-      ativa: promocao,
-      desconto: desconto
-    }
-  }, { headers: { Authorization: `Bearer ${token}` } })
-  .then(() => {
-    setNome('')
-    setPreco('')
-    setDescricao('')
-    setCategoria('')
-    setImagem('')
-    setEditandoId(null)
-    setPromocao(false)
-    setDesconto(0)
-    toast.success("Produto atualizado com sucesso!")
-    buscarProdutos()
-  })
-  .catch((err) => {
-    toast.error("Erro ao atualizar produto")
-    console.log(err)
-  })
-}
-
-return (
-  <>
-    <ToastContainer />
-
-    <div className="max-w-5xl mx-auto p-4">
-
-      <h1 className="text-3xl font-bold mb-4 text-center">
-        Painel Admin
-      </h1>
-
-      <div className="flex gap-4 mb-6">
-        <button onClick={() => setAba("produtos")}>
-          Produtos
-        </button>
-      </div>
-
-      <hr className="mb-6"/>
-
-      {aba === "produtos" && (
-        <>
-          <div className="bg-white shadow rounded-lg p-4 mb-8">
-
-            <h2 className="text-xl font-semibold mb-4">
-              Cadastrar Produto
-            </h2>
-
-            <div className="grid md:grid-cols-2 gap-4">
-
-              <input
-                type="text"
-                placeholder="Nome"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                className="p-2 border rounded"
-              />
-
-              <input
-                type="number"
-                placeholder="Preço"
-                value={preco}
-                onChange={(e) => setPreco(e.target.value)}
-                className="p-2 border rounded"
-              />
-
-              <select
-                value={categoria}
-                onChange={(e) => setCategoria(e.target.value)}
-                className="p-2 border rounded"
-              >
-                <option value="">Selecione uma categoria</option>
-                <option value="Bebidas">Bebidas</option>
-                <option value="Alimentos">Alimentos</option>
-                <option value="Limpeza">Limpeza</option>
-              </select>
-
-              <input 
-                type="text"
-                placeholder="Cadastrar categoria" 
-                // value={novaCategoria} 
-                // onChange={(e) => setNovaCategoria(e.target.value)} 
-                className="p-2 border rounded" />
-
-
-              <input
-                type="text"
-                placeholder="URL da imagem"
-                value={imagem}
-                onChange={(e) => setImagem(e.target.value)}
-                className="p-2 border rounded"
-              />
-
+          {/* HEADER */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
+            <div>
+              <h1 style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: "#0f0f0f", marginBottom: 4 }}>Produtos</h1>
+              <p style={{ fontSize: 14, color: "#888" }}>{produtos.length} produto{produtos.length !== 1 ? "s" : ""} cadastrado{produtos.length !== 1 ? "s" : ""}</p>
             </div>
-
-            <input
-              type="text"
-              placeholder="Descrição"
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              className="p-2 border rounded w-full mt-4"
-            />
-
-            {imagem && (
-              <img
-                src={imagem}
-                className="w-24 h-24 object-cover mt-4 rounded"
-              />
-            )}
-
-            <label className="flex items-center gap-2 mt-4">
-              <input
-                type="checkbox"
-                checked={promocao}
-                onChange={(e) => setPromocao(e.target.checked)}
-              />
-              Produto em promoção 🔥
-            </label>
-
-            {promocao && (
-              <input
-                type="number"
-                placeholder="Desconto (R$)"
-                value={desconto}
-                onChange={(e) => setDesconto(Number(e.target.value))}
-                className="p-2 border rounded w-full mt-2"
-              />
-            )}
-
-            <button
-              onClick={() => {
-                if (editandoId) {
-                  atualizarProduto(editandoId)
-                } else {
-                  criarProduto()
-                }
-              }}
-              className="mt-4 w-full bg-green-500 hover:bg-green-600 text-white p-2 rounded"
-            >
-              {editandoId ? "Atualizar Produto" : "Criar Produto"}
+            <button className="btn-dark" onClick={() => { limparForm(); setMostrarForm(!mostrarForm) }}>
+              <Plus size={16} /> Novo produto
             </button>
-
           </div>
 
-          <h2 className="text-xl font-semibold mb-4">
-            Lista de Produtos Cadastrados
-          </h2>
+          {/* FORMULÁRIO */}
+          {mostrarForm && (
+            <div className="card" style={{ padding: 28, marginBottom: 32 }}>
+              <h2 style={{ fontSize: 17, fontWeight: 600, marginBottom: 20, color: "#0f0f0f" }}>
+                {editandoId ? "Editar produto" : "Novo produto"}
+              </h2>
 
-          {loading && <p>🔄 Carregando produtos...</p>}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 12 }}>
+                <input className="admin-input" placeholder="Nome do produto" value={nome} onChange={e => setNome(e.target.value)} />
+                <input className="admin-input" type="number" placeholder="Preço (R$)" value={preco} onChange={e => setPreco(e.target.value)} />
+                <select className="admin-input" value={categoria} onChange={e => setCategoria(e.target.value)}>
+                  <option value="">Categoria</option>
+                  <option value="Bebidas">Bebidas</option>
+                  <option value="Alimentos">Alimentos</option>
+                  <option value="Limpeza">Limpeza</option>
+                </select>
+                <input className="admin-input" placeholder="URL da imagem" value={imagem} onChange={e => setImagem(e.target.value)} />
+              </div>
 
-          {!loading && produtos.length === 0 && (
-            <p className="text-gray-500">
-              📦 Nenhum produto cadastrado ainda.
-            </p>
+              <input className="admin-input" placeholder="Descrição" value={descricao} onChange={e => setDescricao(e.target.value)} style={{ marginBottom: 16 }} />
+
+              {imagem && (
+                <img src={imagem} alt="" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 10, marginBottom: 16, border: "1px solid #f0f0f0" }} />
+              )}
+
+              <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#444", marginBottom: 12, cursor: "pointer" }}>
+                <input type="checkbox" checked={promocao} onChange={e => setPromocao(e.target.checked)} />
+                Produto em promoção 🔥
+              </label>
+
+              {promocao && (
+                <input className="admin-input" type="number" placeholder="Valor do desconto (R$)" value={desconto} onChange={e => setDesconto(Number(e.target.value))} style={{ maxWidth: 240, marginBottom: 16 }} />
+              )}
+
+              <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                <button className="btn-dark" onClick={() => editandoId ? atualizarProduto(editandoId) : criarProduto()}>
+                  {editandoId ? "Salvar alterações" : "Criar produto"} <ChevronRight size={15} />
+                </button>
+                <button className="btn-outline" onClick={limparForm}>Cancelar</button>
+              </div>
+            </div>
           )}
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {/* LISTA */}
+          {loading && (
+            <div style={{ textAlign: "center", padding: 48, color: "#888", fontSize: 14 }}>Carregando produtos...</div>
+          )}
+
+          {!loading && produtos.length === 0 && (
+            <div style={{ textAlign: "center", padding: 64, color: "#aaa" }}>
+              <Package size={40} style={{ marginBottom: 12, opacity: 0.4 }} />
+              <p style={{ fontSize: 15 }}>Nenhum produto cadastrado ainda.</p>
+              <p style={{ fontSize: 13, marginTop: 4 }}>Clique em "Novo produto" para começar.</p>
+            </div>
+          )}
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
             {!loading && produtos.map(produto => (
-              <div key={produto._id} className="bg-white rounded shadow p-4">
-
-                <img src={produto.imagem} alt="" />
-
-                <h3 className="font-semibold">
-                  {produto.nome}
-                </h3>
-
-                <p className="text-gray-600">
-                  R$ {produto.preco}
-                </p>
-
-                {produto.promocao?.ativa && (
-                  <p className="text-red-500 text-sm mt-1">
-                    🔥 Promoção: R$ {produto.promocao.desconto}
-                  </p>
+              <div key={produto._id} className="produto-card">
+                {produto.imagem ? (
+                  <img src={produto.imagem} alt={produto.nome} style={{ width: "100%", height: 160, objectFit: "cover" }} />
+                ) : (
+                  <div style={{ width: "100%", height: 160, background: "#f4f4f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Package size={32} color="#ccc" />
+                  </div>
                 )}
 
-                <div className="flex gap-2 mt-4">
+                <div style={{ padding: 16 }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 600, color: "#0f0f0f", lineHeight: 1.3 }}>{produto.nome}</h3>
+                    {produto.promocao?.ativa && <span className="badge">🔥 Promo</span>}
+                  </div>
 
-                  <button
-                    onClick={() => {
-                      setProdutoSelecionado(produto)
-                      setMostrarConfirmacao(true)
-                    }}
-                    className="flex-1 bg-red-500 text-white p-2 rounded hover:bg-red-600"
-                  >
-                    Deletar
-                  </button>
+                  {produto.categoria && (
+                    <span className="categoria-badge" style={{ marginBottom: 10, display: "inline-flex" }}>
+                      <Tag size={10} /> {produto.categoria}
+                    </span>
+                  )}
 
-                  <button
-                    onClick={() => {
-                      setNome(produto.nome)
-                      setPreco(produto.preco)
-                      setDescricao(produto.descricao)
-                      setImagem(produto.imagem)
-                      setEditandoId(produto._id)
-                      setCategoria(produto.categoria || "")
-                      setDesconto(produto.promocao?.desconto || 0)
-                      setPromocao(produto.promocao?.ativa || false)
-                    }}
-                    className="flex-1 bg-gray-200 p-2 rounded hover:bg-gray-300"
-                  >
-                    Editar
-                  </button>
+                  <p style={{ fontSize: 18, fontWeight: 600, color: "#0f0f0f", marginBottom: 4 }}>
+                    R$ {Number(produto.preco).toFixed(2)}
+                  </p>
 
+                  {produto.promocao?.ativa && (
+                    <p style={{ fontSize: 12, color: "#dc2626", marginBottom: 12 }}>
+                      Desconto: R$ {produto.promocao.desconto}
+                    </p>
+                  )}
+
+                  <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                    <button
+                      className="btn-outline"
+                      style={{ flex: 1, padding: "8px 12px", fontSize: 13, justifyContent: "center" }}
+                      onClick={() => editarProduto(produto)}
+                    >
+                      <Pencil size={13} /> Editar
+                    </button>
+                    <button
+                      className="btn-danger"
+                      onClick={() => { setProdutoSelecionado(produto); setMostrarConfirmacao(true) }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </>
-      )}
+        </div>
+      </div>
 
-    </div>
-
-    {aba === "produtos" && (
       <ModalConfirmacao
         aberto={mostrarConfirmacao}
         titulo="Tem certeza?"
-        mensagem={`Deseja deletar o produto ${produtoSelecionado?.nome}?`}
+        mensagem={`Deseja deletar "${produtoSelecionado?.nome}"?`}
         onConfirmar={deletarProduto}
-        onCancelar={() => {
-          setMostrarConfirmacao(false)
-          setProdutoSelecionado(null)
-        }}
+        onCancelar={() => { setMostrarConfirmacao(false); setProdutoSelecionado(null) }}
       />
-    )}
-  </>
-)
+    </>
+  )
 }
 
 export default Admin
