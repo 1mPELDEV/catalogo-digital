@@ -4,8 +4,7 @@ import axios from "axios"
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import ModalConfirmacao from '../components/modalConfirmacao'
-import { useLoja } from "../hooks/useLoja"
-import { Package, Plus, Pencil, Trash2, Tag, Store, LogOut, ChevronRight } from 'lucide-react'
+import { Package, Plus, Pencil, Trash2, Tag, ChevronRight, X } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -22,8 +21,13 @@ function Admin() {
   const [promocao, setPromocao] = useState(false)
   const [desconto, setDesconto] = useState(0)
   const [categoria, setCategoria] = useState("")
-  const [newCategoria, setNewCategoria] = useState([])
+  const [categorias, setCategorias] = useState([])
   const [mostrarForm, setMostrarForm] = useState(false)
+
+  // estados para nova categoria inline
+  const [mostrarFormCategoria, setMostrarFormCategoria] = useState(false)
+  const [nomeCategoria, setNomeCategoria] = useState("")
+  const [criandoCategoria, setCriandoCategoria] = useState(false)
 
   const navigate = useNavigate()
   const token = localStorage.getItem("token")
@@ -48,20 +52,49 @@ function Admin() {
   }
 
   const buscarCategorias = async () => {
-    try{
+    try {
       const res = await axios.get(`${API_URL}/categorias`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setNewCategoria(res.data)
-      return res.data
-
-    }catch(err){
+      setCategorias(res.data)
+    } catch (err) {
       toast.error("Erro ao buscar categorias")
     }
   }
 
-  useEffect(() => {
+  const criarCategoria = async () => {
+    if (!nomeCategoria.trim()) return toast.warning("Digite o nome da categoria!")
+    try {
+      setCriandoCategoria(true)
+      const res = await axios.post(`${API_URL}/categorias`, { nome: nomeCategoria }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setCategorias(prev => [...prev, res.data])
+      setCategoria(res.data.nome) // já seleciona a nova categoria
+      setNomeCategoria("")
+      setMostrarFormCategoria(false)
+      toast.success(`Categoria "${res.data.nome}" criada!`)
+    } catch (err) {
+      toast.error(err.response?.data?.erro || "Erro ao criar categoria")
+    } finally {
+      setCriandoCategoria(false)
+    }
+  }
 
+  const deletarCategoria = async (id, nome) => {
+    try {
+      await axios.delete(`${API_URL}/categorias/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setCategorias(prev => prev.filter(c => c._id !== id))
+      if (categoria === nome) setCategoria("")
+      toast.success("Categoria removida!")
+    } catch {
+      toast.error("Erro ao remover categoria")
+    }
+  }
+
+  useEffect(() => {
     const carregar = async () => {
       const dados = await buscarProdutos()
       if (dados) {
@@ -75,7 +108,7 @@ function Admin() {
   const limparForm = () => {
     setNome(''); setPreco(''); setDescricao(''); setImagem('')
     setCategoria(''); setDesconto(0); setPromocao(false); setEditandoId(null)
-    setMostrarForm(false)
+    setMostrarForm(false); setMostrarFormCategoria(false); setNomeCategoria("")
   }
 
   const criarProduto = () => {
@@ -131,11 +164,6 @@ function Admin() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const sair = () => {
-    localStorage.removeItem("token")
-    navigate("/")
-  }
-
   return (
     <>
       <ToastContainer />
@@ -151,15 +179,21 @@ function Admin() {
         .btn-outline:hover { border-color: #aaa; background: #fafafa; }
         .btn-danger { background: transparent; color: #dc2626; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; border: 1.5px solid #fecaca; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; font-family: inherit; }
         .btn-danger:hover { background: #fef2f2; border-color: #dc2626; }
+        .btn-green { background: #16a34a; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s; font-family: inherit; }
+        .btn-green:hover { background: #15803d; }
+        .btn-ghost { background: transparent; color: #888; padding: 6px 10px; border-radius: 8px; font-size: 13px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s; font-family: inherit; }
+        .btn-ghost:hover { background: #f0f0f0; color: #333; }
         .card { background: #fff; border: 1px solid #f0f0f0; border-radius: 16px; }
         .produto-card { background: #fff; border: 1px solid #f0f0f0; border-radius: 14px; overflow: hidden; transition: box-shadow 0.15s; }
         .produto-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
         .badge { display: inline-flex; align-items: center; gap: 4px; background: #fef9c3; border: 1px solid #fde047; color: #854d0e; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 999px; }
         .categoria-badge { display: inline-flex; align-items: center; gap: 4px; background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 999px; }
+        .cat-chip { display: inline-flex; align-items: center; gap: 6px; background: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 8px; padding: 5px 10px; font-size: 13px; color: #333; }
+        .cat-chip button { background: none; border: none; cursor: pointer; color: #aaa; display: flex; padding: 0; transition: color 0.15s; }
+        .cat-chip button:hover { color: #dc2626; }
       `}</style>
 
       <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: "#f8f8f8", minHeight: "100vh" }}>
-
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
 
           {/* HEADER */}
@@ -173,7 +207,7 @@ function Admin() {
             </button>
           </div>
 
-          {/* FORMULÁRIO */}
+          {/* FORMULÁRIO DE PRODUTO */}
           {mostrarForm && (
             <div className="card" style={{ padding: 28, marginBottom: 32 }}>
               <h2 style={{ fontSize: 17, fontWeight: 600, marginBottom: 20, color: "#0f0f0f" }}>
@@ -183,14 +217,73 @@ function Admin() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 12 }}>
                 <input className="admin-input" placeholder="Nome do produto" value={nome} onChange={e => setNome(e.target.value)} />
                 <input className="admin-input" type="number" placeholder="Preço (R$)" value={preco} onChange={e => setPreco(e.target.value)} />
-                <select className="admin-input" value={categoria} onChange={e => setCategoria(e.target.value)}>
-                  {/* map para exibir categorias */}
+                <input className="admin-input" placeholder="URL da imagem" value={imagem} onChange={e => setImagem(e.target.value)} />
+              </div>
 
-                  {newCategoria.map((cat) => (
+              {/* SELECT DE CATEGORIA */}
+              <div style={{ marginBottom: 16 }}>
+                <select
+                  className="admin-input"
+                  value={categoria}
+                  onChange={e => setCategoria(e.target.value)}
+                  style={{ marginBottom: 8 }}
+                >
+                  <option value="">Selecione uma categoria</option>
+                  {categorias.map(cat => (
                     <option key={cat._id} value={cat.nome}>{cat.nome}</option>
                   ))}
                 </select>
-                <input className="admin-input" placeholder="URL da imagem" value={imagem} onChange={e => setImagem(e.target.value)} />
+
+                {/* CHIPS DAS CATEGORIAS COM DELETE */}
+                {categorias.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                    {categorias.map(cat => (
+                      <div key={cat._id} className="cat-chip">
+                        <Tag size={11} />
+                        {cat.nome}
+                        <button onClick={() => deletarCategoria(cat._id, cat.nome)} title="Remover categoria">
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* BOTÃO + FORM NOVA CATEGORIA */}
+                {!mostrarFormCategoria ? (
+                  <button
+                    className="btn-ghost"
+                    onClick={() => setMostrarFormCategoria(true)}
+                    style={{ fontSize: 13 }}
+                  >
+                    <Plus size={13} /> Nova categoria
+                  </button>
+                ) : (
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
+                    <input
+                      className="admin-input"
+                      placeholder="Nome da categoria"
+                      value={nomeCategoria}
+                      onChange={e => setNomeCategoria(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && criarCategoria()}
+                      autoFocus
+                      style={{ maxWidth: 220 }}
+                    />
+                    <button
+                      className="btn-green"
+                      onClick={criarCategoria}
+                      disabled={criandoCategoria}
+                    >
+                      {criandoCategoria ? "..." : "Criar"}
+                    </button>
+                    <button
+                      className="btn-ghost"
+                      onClick={() => { setMostrarFormCategoria(false); setNomeCategoria("") }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <input className="admin-input" placeholder="Descrição" value={descricao} onChange={e => setDescricao(e.target.value)} style={{ marginBottom: 16 }} />
@@ -205,7 +298,14 @@ function Admin() {
               </label>
 
               {promocao && (
-                <input className="admin-input" type="number" placeholder="Valor do desconto (R$)" value={desconto || "" } onChange={e => setDesconto(Number(e.target.value))} style={{ maxWidth: 240, marginBottom: 16 }} />
+                <input
+                  className="admin-input"
+                  type="number"
+                  placeholder="Valor do desconto (R$)"
+                  value={desconto || ""}
+                  onChange={e => setDesconto(Number(e.target.value))}
+                  style={{ maxWidth: 240, marginBottom: 16 }}
+                />
               )}
 
               <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
@@ -240,29 +340,24 @@ function Admin() {
                     <Package size={32} color="#ccc" />
                   </div>
                 )}
-
                 <div style={{ padding: 16 }}>
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
                     <h3 style={{ fontSize: 15, fontWeight: 600, color: "#0f0f0f", lineHeight: 1.3 }}>{produto.nome}</h3>
                     {produto.promocao?.ativa && <span className="badge">🔥 Promo</span>}
                   </div>
-
                   {produto.categoria && (
                     <span className="categoria-badge" style={{ marginBottom: 10, display: "inline-flex" }}>
                       <Tag size={10} /> {produto.categoria}
                     </span>
                   )}
-
                   <p style={{ fontSize: 18, fontWeight: 600, color: "#0f0f0f", marginBottom: 4 }}>
                     R$ {Number(produto.preco).toFixed(2)}
                   </p>
-
                   {produto.promocao?.ativa && (
                     <p style={{ fontSize: 12, color: "#dc2626", marginBottom: 12 }}>
                       Desconto: R$ {produto.promocao.desconto}
                     </p>
                   )}
-
                   <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                     <button
                       className="btn-outline"
