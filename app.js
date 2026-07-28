@@ -50,6 +50,9 @@ app.use("/loja", loja)
 const auth = require("./routes/auth")
  app.use("/auth" , auth)
 
+const categorias = require("./routes/categorias")
+app.use("/categorias", categorias)
+
     //Rota principal
 app.get('/',(req,res)=>{
     res.send("Rota principal funcionando")

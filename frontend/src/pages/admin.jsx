@@ -4,6 +4,7 @@ import axios from "axios"
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import ModalConfirmacao from '../components/modalConfirmacao'
+import { useLoja } from "../hooks/useLoja"
 import { Package, Plus, Pencil, Trash2, Tag, Store, LogOut, ChevronRight } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL
@@ -21,6 +22,7 @@ function Admin() {
   const [promocao, setPromocao] = useState(false)
   const [desconto, setDesconto] = useState(0)
   const [categoria, setCategoria] = useState("")
+  const [newCategoria, setNewCategoria] = useState([])
   const [mostrarForm, setMostrarForm] = useState(false)
 
   const navigate = useNavigate()
@@ -45,12 +47,27 @@ function Admin() {
     }
   }
 
+  const buscarCategorias = async () => {
+    try{
+      const res = await axios.get(`${API_URL}/categorias`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setNewCategoria(res.data)
+      return res.data
+
+    }catch(err){
+      toast.error("Erro ao buscar categorias")
+    }
+  }
+
   useEffect(() => {
+
     const carregar = async () => {
       const dados = await buscarProdutos()
       if (dados) {
         toast.info(`👋 Bem vindo(a)! Você tem ${dados.length} produtos cadastrados.`, { autoClose: 4000 })
       }
+      await buscarCategorias()
     }
     carregar()
   }, [])
@@ -167,10 +184,11 @@ function Admin() {
                 <input className="admin-input" placeholder="Nome do produto" value={nome} onChange={e => setNome(e.target.value)} />
                 <input className="admin-input" type="number" placeholder="Preço (R$)" value={preco} onChange={e => setPreco(e.target.value)} />
                 <select className="admin-input" value={categoria} onChange={e => setCategoria(e.target.value)}>
-                  <option value="">Categoria</option>
-                  <option value="Bebidas">Bebidas</option>
-                  <option value="Alimentos">Alimentos</option>
-                  <option value="Limpeza">Limpeza</option>
+                  {/* map para exibir categorias */}
+
+                  {newCategoria.map((cat) => (
+                    <option key={cat._id} value={cat.nome}>{cat.nome}</option>
+                  ))}
                 </select>
                 <input className="admin-input" placeholder="URL da imagem" value={imagem} onChange={e => setImagem(e.target.value)} />
               </div>
@@ -187,7 +205,7 @@ function Admin() {
               </label>
 
               {promocao && (
-                <input className="admin-input" type="number" placeholder="Valor do desconto (R$)" value={desconto} onChange={e => setDesconto(Number(e.target.value))} style={{ maxWidth: 240, marginBottom: 16 }} />
+                <input className="admin-input" type="number" placeholder="Valor do desconto (R$)" value={desconto || "" } onChange={e => setDesconto(Number(e.target.value))} style={{ maxWidth: 240, marginBottom: 16 }} />
               )}
 
               <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
