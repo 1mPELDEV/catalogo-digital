@@ -3,194 +3,241 @@ import { useState, useEffect } from "react"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import formatarPreco from "../../utils/formatarpreco"
+import { ShoppingCart, MessageCircle, Search, Tag, Star } from "lucide-react"
 
-function ProdutosGrid ({slug , loja}) {
+const API_URL = import.meta.env.VITE_API_URL
+
+function ProdutosGrid({ slug, loja }) {
 
   const chaveLocalStorage = `carrinho-${slug}`
 
-  const [produtos , setProdutos] = useState([])
+  const [produtos, setProdutos] = useState([])
+  const [categorias, setCategorias] = useState([])
   const [lista, setLista] = useState([])
   const [busca, setBusca] = useState("")
   const [categoriaSelecionada, setCategoriaSelecionada] = useState("")
 
-//faz a requisição para pegar os produtos da loja 
-  const list = async () =>{
-    try{
-      const res = await axios.get(`http://localhost:8082/produtos/${slug}`)
+  const corPrimaria = loja?.tema?.corPrimaria || "#22c55e"
+
+  const list = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/produtos/${slug}`)
       setProdutos(res.data)
-    }catch(err){
+    } catch (err) {
       console.log("erro " + err)
     }
   }
 
-// apos mudar o slug ele vai atualizar a lista de produtos e o carrinho
-    useEffect(()=>{
-
-      list()
-
-      const pedidoSalvo = 
-        JSON.parse(localStorage.getItem(chaveLocalStorage)) || []
-
-      setLista(pedidoSalvo)
-
-    }, [slug])
-
-//coloca um novo item na lista de produtos do carrinho e salva no localStorage
-  const addItem = (produto) => {
-
-      const precoFinal = produto.promocao?.ativa
-        ? produto.preco - produto.promocao.desconto
-        : produto.preco
-
-      const produtoComPreco = {
-        ...produto,
-        precoFinal
-      }
-
-      const novaLista = [
-        ...lista,
-        produtoComPreco
-      ]
-
-      setLista(novaLista)
-
-      toast.success("Produto adicionado ao pedido!")
-
-      localStorage.setItem(
-        chaveLocalStorage,
-        JSON.stringify(novaLista)
-      )
-
-      window.dispatchEvent(new Event("storage"))
+  const buscarCategorias = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/categorias/${slug}`)
+      setCategorias(res.data)
+    } catch (err) {
+      console.log("erro categorias:", err)
+    }
   }
-// busca e filtro de produtos
+
+  useEffect(() => {
+    list()
+    buscarCategorias()
+    const pedidoSalvo = JSON.parse(localStorage.getItem(chaveLocalStorage)) || []
+    setLista(pedidoSalvo)
+  }, [slug])
+
+  const addItem = (produto) => {
+    const precoFinal = produto.promocao?.ativa
+      ? produto.preco - produto.promocao.desconto
+      : produto.preco
+
+    const produtoComPreco = { ...produto, precoFinal }
+    const novaLista = [...lista, produtoComPreco]
+
+    setLista(novaLista)
+    toast.success("Produto adicionado ao pedido!")
+    localStorage.setItem(chaveLocalStorage, JSON.stringify(novaLista))
+    window.dispatchEvent(new Event("storage"))
+  }
+
+  const abrirWhatsApp = (produto) => {
+    const numero = loja?.contato?.whatsapp
+    if (!numero) {
+      toast.error("Esta loja ainda não configurou o WhatsApp!")
+      return
+    }
+    const mensagem = `Olá! Tenho interesse no produto:\n\n🛒 ${produto.nome}\n💰 ${formatarPreco(produto.preco)}\n\nPode me dar mais informações?`
+    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, "_blank")
+  }
+
   const produtosFiltrados = produtos
-  .filter(produto =>
-    produto.nome.toLowerCase().includes(busca.toLowerCase())
-  )
-  .filter(produto =>
-    categoriaSelecionada
-      ? produto.categoria === categoriaSelecionada
-      : true
-  )
+    .filter(p => p.nome.toLowerCase().includes(busca.toLowerCase()))
+    .filter(p => categoriaSelecionada ? p.categoria === categoriaSelecionada : true)
 
   const produtosOrdenados = [...produtosFiltrados].sort((a, b) => {
-  const aPromo = a.promocao?.ativa ? 1 : 0
-  const bPromo = b.promocao?.ativa ? 1 : 0
-
-  return bPromo - aPromo
-})
-
-// função para abrir no whatsapp quando o catalogo não tiver carrinho
-
-const abrirWhatsApp = (produto) => {
-  const numero = loja?.contato?.whatsapp // depois deixa dinâmico
-
-    const mensagem = `Olá! Tenho interesse no produto:
-
-    🛒 ${produto.nome}
-    💰 ${formatarPreco(produto.preco)}
-
-    Pode me dar mais informações?`
-
-  const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
-
-  window.open(url, "_blank")
-}
+    return (b.promocao?.ativa ? 1 : 0) - (a.promocao?.ativa ? 1 : 0)
+  })
 
   return (
-  <>
+    <>
+      <ToastContainer />
 
-<div className="max-w-4xl mx-auto px-4 mt-6">
-  <p className="text-sm text-gray-600 mb-2">🔎 Busque ou filtre produtos</p>
-  <div className="flex flex-col md:flex-row gap-3">
-    <input
-      type="text"
-      placeholder="Buscar produto..."
-      value={busca}
-      onChange={(e) => setBusca(e.target.value)}
-      className="flex-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
-    />
-    <select
-      value={categoriaSelecionada}
-      onChange={(e) => setCategoriaSelecionada(e.target.value)}
-      className="p-2 border rounded md:w-56 focus:outline-none focus:ring-2 focus:ring-green-400"
-    >
-      {/* passa de forma  fixa o conteudo para a filtragem de categorias depois deixar dinamico */}
-      <option value="">Todas</option>
-      <option value="Bebidas">Bebidas</option>
-      <option value="Alimentos">Alimentos</option>
-      <option value="Limpeza">Limpeza</option>
-    </select>
-  </div>
-</div>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        .grid-input { padding: 10px 14px; border: 1.5px solid #e2e2e2; border-radius: 10px; font-size: 14px; font-family: inherit; color: #0f0f0f; outline: none; transition: border-color 0.15s; background: #fff; width: 100%; }
+        .grid-input:focus { border-color: #0f0f0f; }
+        .cat-btn { padding: 7px 16px; border-radius: 999px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1.5px solid #e2e2e2; background: #fff; color: #555; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
+        .cat-btn:hover { border-color: #aaa; }
+        .cat-btn.ativo { color: #fff; border-color: transparent; }
+        .produto-card { background: #fff; border: 1px solid #f0f0f0; border-radius: 16px; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s; display: flex; flex-direction: column; }
+        .produto-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .promo-badge { position: absolute; top: 10px; left: 10px; background: #dc2626; color: #fff; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; display: flex; align-items: center; gap: 4px; }
+        .btn-add { width: 100%; padding: 11px; border-radius: 10px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; transition: opacity 0.15s; color: #fff; }
+        .btn-add:hover { opacity: 0.88; }
+        .quantidade-badge { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #666; margin-top: 6px; justify-content: center; }
+      `}</style>
 
-    <div className="text-center py-8">
-        <h1 className="text-2xl md:text-4xl font-bold">Catalogo digital 🔥</h1>
-        <p className="text-gray-600 mt-2">confira o nosso catálogo</p>
-    </div>
+      <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: "#f8f8f8", minHeight: "60vh" }}>
 
-    {produtosOrdenados.length === 0 ? (
-      <p className="text-center text-gray-500 mt-6">Nenhum item bate com a busca 😕</p>)
-      : (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-
-      {/* mapeia os produtos ordenados e exibe na tela e passa "produto" como argumento nos elementos html */}
-      
-      {produtosOrdenados.map(produto => {
-        // calcula quantidade e evita calcular quantidade (que exibe no card "x no pedido") se não tiver carrinho
-      const quantidade = loja.features.carrinho
-        ? lista.filter(item => item._id === produto._id).length
-        : 0
-
-      return (
-        <div className="bg-red-100 rounded-lg shadow p-4 flex flex-col relative" key={produto._id}>
-          {produto.promocao?.ativa && (
-          <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded"> Promoção 🔥</span>
-          )}
-            <img 
-              src={produto.imagem || "https://picsum.photos/200"} 
-              alt={produto.nome}
-              className="w-full h-48 object-cover rounded"
-              onError={(e) => {
-              e.target.src = "https://picsum.photos/200"
-           }}/>
-            <h3 className="text-lg font-semibold mt-2" >{produto.nome}</h3>
-            <small className="text-gray-500" >{produto.descricao}</small>
-          {produto.promocao?.ativa ? (
-            <>
-              <p className="text-gray-400 line-through">{formatarPreco(produto.preco)}</p>
-              <p className="text-green-600 font-bold">{formatarPreco(produto.preco - produto.promocao.desconto)}</p>
-            </> ) : (
-              <p className="text-green-600 font-bold">{formatarPreco(produto.preco)}</p>
-          )}
-          {loja?.features?.carrinho ? (
-            <button
-              className={`mt-3 bg-green-500 hover:bg-red-600 text-white py-2 rounded transition`}
-              onClick={() => addItem(produto)}
-            >
-              Adicionar produto
-            </button>
-          ) : (
-            <button
-              className="mt-3 bg-green-500 text-white py-2 rounded hover:bg-green-600 transition"
-              onClick={() => abrirWhatsApp(produto)}
-            >
-              Falar no WhatsApp
-            </button>
-          )}
-            {loja?.features?.carrinho && quantidade > 0 && (
-              <small className="mt-1 text-gray-600">
-                🛒 {quantidade} no pedido
-              </small>
-            )}
+        {/* BUSCA */}
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 24px 0" }}>
+          <div style={{ position: "relative", maxWidth: 480 }}>
+            <Search size={16} color="#aaa" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
+            <input
+              className="grid-input"
+              placeholder="Buscar produto..."
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+              style={{ paddingLeft: 40 }}
+            />
           </div>
-        )
-      })}
-    </div>
-  )}
 
+          {/* FILTRO DE CATEGORIAS */}
+          {categorias.length > 0 && (
+            <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+              <button
+                className={`cat-btn ${categoriaSelecionada === "" ? "ativo" : ""}`}
+                style={categoriaSelecionada === "" ? { backgroundColor: corPrimaria } : {}}
+                onClick={() => setCategoriaSelecionada("")}
+              >
+                Todos
+              </button>
+              {categorias.map(cat => (
+                <button
+                  key={cat._id}
+                  className={`cat-btn ${categoriaSelecionada === cat.nome ? "ativo" : ""}`}
+                  style={categoriaSelecionada === cat.nome ? { backgroundColor: corPrimaria } : {}}
+                  onClick={() => setCategoriaSelecionada(cat.nome)}
+                >
+                  {cat.nome}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
-  </>
+        {/* GRID DE PRODUTOS */}
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px" }}>
+
+          {produtosOrdenados.length === 0 && (
+            <div style={{ textAlign: "center", padding: "64px 0", color: "#aaa" }}>
+              <Search size={36} style={{ marginBottom: 12, opacity: 0.3 }} />
+              <p style={{ fontSize: 15 }}>Nenhum produto encontrado.</p>
+            </div>
+          )}
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
+            {produtosOrdenados.map(produto => {
+              const quantidade = loja?.features?.carrinho
+                ? lista.filter(item => item._id === produto._id).length
+                : 0
+
+              const precoFinal = produto.promocao?.ativa
+                ? produto.preco - produto.promocao.desconto
+                : produto.preco
+
+              return (
+                <div key={produto._id} className="produto-card">
+
+                  <div style={{ position: "relative" }}>
+                    <img
+                      src={produto.imagem || "https://picsum.photos/200"}
+                      alt={produto.nome}
+                      style={{ width: "100%", height: 180, objectFit: "cover" }}
+                      onError={e => e.target.src = "https://picsum.photos/200"}
+                    />
+                    {produto.promocao?.ativa && (
+                      <span className="promo-badge">
+                        <Star size={10} fill="#fff" /> Promoção
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ padding: 14, flex: 1, display: "flex", flexDirection: "column" }}>
+
+                    {produto.categoria && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#888", marginBottom: 6 }}>
+                        <Tag size={10} /> {produto.categoria}
+                      </div>
+                    )}
+
+                    <h3 style={{ fontSize: 15, fontWeight: 600, color: "#0f0f0f", marginBottom: 4, lineHeight: 1.3 }}>
+                      {produto.nome}
+                    </h3>
+
+                    {produto.descricao && (
+                      <p style={{ fontSize: 12, color: "#999", marginBottom: 8, lineHeight: 1.4 }}>
+                        {produto.descricao}
+                      </p>
+                    )}
+
+                    <div style={{ marginBottom: 12, marginTop: "auto" }}>
+                      {produto.promocao?.ativa ? (
+                        <>
+                          <p style={{ fontSize: 12, color: "#bbb", textDecoration: "line-through" }}>
+                            {formatarPreco(produto.preco)}
+                          </p>
+                          <p style={{ fontSize: 18, fontWeight: 600, color: corPrimaria }}>
+                            {formatarPreco(precoFinal)}
+                          </p>
+                        </>
+                      ) : (
+                        <p style={{ fontSize: 18, fontWeight: 600, color: corPrimaria }}>
+                          {formatarPreco(produto.preco)}
+                        </p>
+                      )}
+                    </div>
+
+                    {loja?.features?.carrinho ? (
+                      <button
+                        className="btn-add"
+                        style={{ backgroundColor: corPrimaria }}
+                        onClick={() => addItem(produto)}
+                      >
+                        <ShoppingCart size={15} /> Adicionar
+                      </button>
+                    ) : (
+                      <button
+                        className="btn-add"
+                        style={{ backgroundColor: "#25d366" }}
+                        onClick={() => abrirWhatsApp(produto)}
+                      >
+                        <MessageCircle size={15} /> Falar no WhatsApp
+                      </button>
+                    )}
+
+                    {loja?.features?.carrinho && quantidade > 0 && (
+                      <div className="quantidade-badge">
+                        <ShoppingCart size={11} /> {quantidade} no pedido
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </>
   )
 }
 
