@@ -12,8 +12,8 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: "zipadao-logos",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    transformation: [{ width: 300, height: 300, crop: "limit" }]
+    allowed_formats: ["jpg", "jpeg", "png", "webp","jfif"],
+    transformation: [{ width: 800, height: 800, crop: "fill", gravity: "auto" }]
   }
 })
 
