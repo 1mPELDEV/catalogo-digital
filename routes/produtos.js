@@ -7,6 +7,8 @@ const Loja = require("../models/Loja")
 const { verificaToken } =
 require('../middlewares/authMiddleware')
 
+const upload = require('../config/multer')
+
 
 // CREATE
 router.post('/', verificaToken, upload.single('imagem'), async (req, res) => {
