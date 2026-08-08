@@ -12,7 +12,11 @@ function Admin() {
   const [produtos, setProdutos] = useState([])
   const [nome, setNome] = useState('')
   const [preco, setPreco] = useState('')
+
   const [imagem, setImagem] = useState('')
+  const [imagemFile, setImagemFile] = useState(null)
+  const [imagemPreview, setImagemPreview] = useState("")
+
   const [descricao, setDescricao] = useState('')
   const [editandoId, setEditandoId] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -106,9 +110,19 @@ function Admin() {
   }, [])
 
   const limparForm = () => {
-    setNome(''); setPreco(''); setDescricao(''); setImagem('')
-    setCategoria(''); setDesconto(0); setPromocao(false); setEditandoId(null)
-    setMostrarForm(false); setMostrarFormCategoria(false); setNomeCategoria("")
+    setNome('');
+    setPreco('');
+    setDescricao('');
+    setImagem('');
+    setCategoria('');
+    setDesconto(0);
+    setPromocao(false);
+    setEditandoId(null);
+    setMostrarForm(false);
+    setMostrarFormCategoria(false);
+    setNomeCategoria("");
+    setImagemFile(null);
+    setImagemPreview("");
   }
 
   const criarProduto = () => {
@@ -116,22 +130,39 @@ function Admin() {
     if (!preco || preco <= 0) return toast.warning("O preço deve ser maior que 0!")
     if (!categoria) return toast.warning("Selecione uma categoria!")
 
-    axios.post(`${API_URL}/produtos`, {
-      nome, preco: Number(preco), descricao, categoria, imagem,
-      promocao: { ativa: promocao, desconto }
-    }, { headers: { Authorization: `Bearer ${token}` } })
+    const formData = new FormData()
+    formData.append("nome", nome)
+    formData.append("preco", preco)
+    formData.append("descricao", descricao)
+    formData.append("categoria", categoria)
+    formData.append("promocao_ativa", promocao)
+    formData.append("promocao_desconto", desconto)
+    if (imagemFile) formData.append("imagem", imagemFile)
+    else if (imagem) formData.append("imagem", imagem)
+
+    axios.post(`${API_URL}/produtos`, formData, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
+    })
       .then(() => { limparForm(); toast.success("Produto criado!"); buscarProdutos() })
       .catch(() => toast.error("Erro ao criar produto"))
   }
-
   const atualizarProduto = (id) => {
     if (!nome.trim()) return toast.warning("O nome não pode ficar vazio!")
     if (!preco || preco <= 0) return toast.warning("O preço deve ser maior que 0!")
 
-    axios.put(`${API_URL}/produtos/${id}`, {
-      nome, preco: Number(preco), descricao, categoria, imagem,
-      promocao: { ativa: promocao, desconto }
-    }, { headers: { Authorization: `Bearer ${token}` } })
+    const formData = new FormData()
+    formData.append("nome", nome)
+    formData.append("preco", preco)
+    formData.append("descricao", descricao)
+    formData.append("categoria", categoria)
+    formData.append("promocao_ativa", promocao)
+    formData.append("promocao_desconto", desconto)
+    if (imagemFile) formData.append("imagem", imagemFile)
+    else if (imagem) formData.append("imagem", imagem)
+
+    axios.put(`${API_URL}/produtos/${id}`, formData, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
+    })
       .then(() => { limparForm(); toast.success("Produto atualizado!"); buscarProdutos() })
       .catch(() => toast.error("Erro ao atualizar produto"))
   }
@@ -217,7 +248,37 @@ function Admin() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 12 }}>
                 <input className="admin-input" placeholder="Nome do produto" value={nome} onChange={e => setNome(e.target.value)} />
                 <input className="admin-input" type="number" placeholder="Preço (R$)" value={preco} onChange={e => setPreco(e.target.value)} />
-                <input className="admin-input" placeholder="URL da imagem" value={imagem} onChange={e => setImagem(e.target.value)} />
+
+                <input
+                  className="admin-input"
+                  placeholder="URL da imagem"
+                  value={imagem}
+                  onChange={e => { setImagem(e.target.value); setImagemPreview("") }}
+                />
+
+                <div style={{ marginTop: 8, marginBottom: 4, fontSize: 13, color: "#888" }}>ou</div>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => {
+                    const file = e.target.files[0]
+                    if (file) {
+                      setImagemFile(file)
+                      setImagemPreview(URL.createObjectURL(file))
+                      setImagem("")
+                    }
+                  }}
+                  style={{ fontSize: 13 }}
+                />
+
+                {(imagemPreview || imagem) && (
+                  <img
+                    src={imagemPreview || imagem}
+                    alt=""
+                    style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 10, marginTop: 10, border: "1px solid #f0f0f0" }}
+                  />
+                )}
               </div>
 
               {/* SELECT DE CATEGORIA */}
