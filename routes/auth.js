@@ -10,7 +10,8 @@ const upload = require("../config/multer")
 
 console.log("auth.js: Auth router carregado ")
 
-router.post("/register", upload.single("logo"), async (req, res) => {
+router.post("/register", upload.fields([{ name: "logo", maxCount: 1 }, { name: "banner", maxCount: 1 }]),
+ async (req, res) => {
   try {
 
     const { nomeLoja, email, senha, whatsapp, corPrimaria} = req.body
@@ -51,9 +52,9 @@ router.post("/register", upload.single("logo"), async (req, res) => {
 
       slug,
 
-      logo: req.file
-        ? req.file.path
-        : null,
+    logo: req.files?.logo?.[0]?.path || null,
+
+    banner: req.files?.banner?.[0]?.path || null,
 
       tema: {
         corPrimaria: corPrimaria || "#22c55e"

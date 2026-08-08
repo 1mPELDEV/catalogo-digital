@@ -13,6 +13,9 @@ function Cadastro() {
 
   const [logo, setLogo] = useState(null)
   const [logoPreview, setLogoPreview] = useState("")
+  
+  const [banner, setBanner] = useState(null)
+  const [bannerPreview, setBannerPreview] = useState("")
 
   const navigate = useNavigate()
 
@@ -31,6 +34,10 @@ function Cadastro() {
 
       if(logo){
         formData.append("logo", logo)
+      }
+
+      if(banner){
+        formData.append("banner", banner)
       }
 
 
@@ -124,7 +131,9 @@ function Cadastro() {
           <p className="text-sm mt-2 text-gray-600">
             Cor escolhida: {corPrimaria}
           </p>
-        
+        <label className="block mb-2 font-medium mt-4">
+          Logo da loja
+        </label>
         <input type="file"
          accept="image/*"
          onChange={(e) => {
@@ -133,10 +142,29 @@ function Cadastro() {
          }}
           className="mb-4"
         />
+        <label className="block mb-2 font-medium mt-4">
+          Banner da loja
+        </label>
+        <input type="file"
+         accept="image/*"
+         onChange={(e) => {
+           setBanner(e.target.files[0])
+           setBannerPreview(URL.createObjectURL(e.target.files[0]))
+         }}
+          className="mb-4"
+        />
 
         {logoPreview && (
           <img
             src={logoPreview}
+            alt="Preview"
+            className="w-full h-auto mb-4"
+          />
+        )}
+
+        {bannerPreview && (
+          <img
+            src={bannerPreview}
             alt="Preview"
             className="w-full h-auto mb-4"
           />
