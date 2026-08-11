@@ -3,15 +3,12 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import ModalConfirmacao from '../components/modalConfirmacao'
 import formatarPreco from '../utils/formatarpreco'
+import { gerarPaleta } from '../utils/paleta'
 import { useParams } from "react-router-dom"
 import { useLoja } from "../hooks/useLoja"
+import { ShoppingBag, Trash2, Plus, Minus, MessageCircle, X, ShoppingCart } from "lucide-react"
 
-const API_URL = import.meta.env.VITE_API_URL
-
-
-
-function Pedido(){
-
+function Pedido() {
   const { slug } = useParams()
   const chaveLocalStorage = `carrinho-${slug}`
   const chaveNome = `nomeCliente-${slug}`
@@ -19,322 +16,280 @@ function Pedido(){
 
   const [lista, setLista] = useState([])
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
-  //modal
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false)
-  const [produtoSelecionado,setProdutoSelecionado] = useState("")
+  const [produtoSelecionado, setProdutoSelecionado] = useState("")
   const [acaoConfirmacao, setAcaoConfirmacao] = useState(null)
-  
   const [nomeCliente, setNomeCliente] = useState("")
   const [endereco, setEndereco] = useState("")
 
-  const  loja  = useLoja(slug)
+  const loja = useLoja(slug)
 
-  useEffect(()=>{
+  const paleta = useMemo(
+    () => gerarPaleta(loja?.tema?.corPrimaria),
+    [loja?.tema?.corPrimaria]
+  )
 
-    const carrinhoSalvo = JSON.parse(localStorage.getItem(chaveLocalStorage)) || []  
+  useEffect(() => {
+    const carrinhoSalvo = JSON.parse(localStorage.getItem(chaveLocalStorage)) || []
+    setLista(carrinhoSalvo)
+  }, [slug])
 
-    if(carrinhoSalvo){
-      setLista(carrinhoSalvo)
-    }
+  useEffect(() => {
+    setNomeCliente(localStorage.getItem(chaveNome) || "")
+    setEndereco(localStorage.getItem(chaveEndereco) || "")
+  }, [slug])
 
-  },[slug])
-
-// salva os dados do cliente no local storage
-    useEffect(() => {
-
-      const nomeSalvo =
-        localStorage.getItem(chaveNome)
-
-      const enderecoSalvo =
-        localStorage.getItem(chaveEndereco)
-
-
-      setNomeCliente(nomeSalvo || "")
-      setEndereco(enderecoSalvo || "")
-
-
-    }, [slug])
-
-    useEffect(() => {
-
-      localStorage.setItem(
-        chaveNome,
-        nomeCliente
-      )
-
-      localStorage.setItem(
-        chaveEndereco,
-        endereco
-      )
-
-    }, [nomeCliente, endereco])
+  useEffect(() => {
+    localStorage.setItem(chaveNome, nomeCliente)
+    localStorage.setItem(chaveEndereco, endereco)
+  }, [nomeCliente, endereco])
 
   const itensAgrupados = useMemo(() => {
-  return Object.values(
-    lista.reduce((acc, produto) => {
-      if(!acc[produto._id]){
-        acc[produto._id] = { ...produto, quantidade: 0 }
-      }
+    return Object.values(
+      lista.reduce((acc, produto) => {
+        if (!acc[produto._id]) acc[produto._id] = { ...produto, quantidade: 0 }
+        acc[produto._id].quantidade++
+        return acc
+      }, {})
+    )
+  }, [lista])
 
-      acc[produto._id].quantidade++
-      
-      return acc
-    }, {})
-  )
-}, [lista])
-
-  const total = itensAgrupados.reduce((acc, item) => {
-  return acc + item.precoFinal * item.quantidade
-}, 0)
+  const total = itensAgrupados.reduce((acc, item) => acc + item.precoFinal * item.quantidade, 0)
 
   const removeItem = (id) => {
-  const novaLista = lista.filter(produto => produto._id !== id)
-  setLista(novaLista)
-  localStorage.setItem(chaveLocalStorage, JSON.stringify(novaLista))
-  window.dispatchEvent(new Event("storage"))
-  toast.success("Produto removido com sucesso!")
-}
+    const novaLista = lista.filter(p => p._id !== id)
+    setLista(novaLista)
+    localStorage.setItem(chaveLocalStorage, JSON.stringify(novaLista))
+    window.dispatchEvent(new Event("storage"))
+    toast.success("Produto removido!")
+  }
 
+  const limparCarrinho = () => {
+    setLista([])
+    localStorage.removeItem(chaveLocalStorage)
+    window.dispatchEvent(new Event("storage"))
+    setMostrarConfirmacao(false)
+  }
 
-const limparCarrinho = () =>{
-  setLista([])
-  localStorage.removeItem(chaveLocalStorage)
-  window.dispatchEvent(new Event("storage"))
-  setMostrarConfirmacao(false)
-}
+  const aumentar = (produto) => {
+    const novaLista = [...lista, produto]
+    setLista(novaLista)
+    localStorage.setItem(chaveLocalStorage, JSON.stringify(novaLista))
+    window.dispatchEvent(new Event("storage"))
+  }
 
-const aumentar = (produto) => {
-  const novaLista = [...lista, produto]
-  setLista(novaLista)
-  localStorage.setItem(chaveLocalStorage, JSON.stringify(novaLista))
-  window.dispatchEvent(new Event("storage"))
-}
+  const diminuir = (id) => {
+    const index = lista.findIndex(p => p._id === id)
+    if (index === -1) return
+    const novaLista = [...lista]
+    novaLista.splice(index, 1)
+    setLista(novaLista)
+    localStorage.setItem(chaveLocalStorage, JSON.stringify(novaLista))
+    window.dispatchEvent(new Event("storage"))
+  }
 
-const diminuir = (id) => {
-  const index = lista.findIndex(p => p._id === id)
-  if(index === -1) return
-  const novaLista = [...lista]
-  novaLista.splice(index, 1)
-  setLista(novaLista)
-  localStorage.setItem(chaveLocalStorage, JSON.stringify(novaLista))
-  window.dispatchEvent(new Event("storage"))
-}
-
-  const finalizarPedido = () =>{
-    if(lista.length === 0){
-      toast.warning("Seu pedido está vazio!")
-      return
-    }
-
-    if(!nomeCliente.trim()){
-      toast.warning("Digite o seu nome!")
-      return
-    }
-
-    if(!endereco.trim()){
-      toast.warning("Digite o seu endereço!")
-      return
-    }
-
-    let mensagem = "🛒 *Novo Pedido* \n\n"
-
-    mensagem += `👤 Nome: ${nomeCliente}\n`
-    mensagem += `📍 Endereço: ${endereco}\n\n`
-
-    itensAgrupados.forEach(item => {
-      mensagem += `• ${item.nome} x${item.quantidade} - R$ ${formatarPreco(item.precoFinal* item.quantidade)}\n`
-    })
-
-    mensagem += `\n💰 Total: R$ ${formatarPreco(total)}`
+  const finalizarPedido = () => {
+    if (lista.length === 0) return toast.warning("Seu pedido está vazio!")
+    if (!nomeCliente.trim()) return toast.warning("Digite o seu nome!")
+    if (!endereco.trim()) return toast.warning("Digite o seu endereço!")
 
     const numero = loja?.contato?.whatsapp
+    if (!numero) return toast.error("Esta loja ainda não configurou o WhatsApp!")
 
-      if (!numero) {
-        toast.error("Esta loja ainda não configurou o WhatsApp!")
-        return
-      } 
+    let mensagem = "🛒 *Novo Pedido* \n\n"
+    mensagem += `👤 Nome: ${nomeCliente}\n`
+    mensagem += `📍 Endereço: ${endereco}\n\n`
+    itensAgrupados.forEach(item => {
+      mensagem += `• ${item.nome} x${item.quantidade} - R$ ${formatarPreco(item.precoFinal * item.quantidade)}\n`
+    })
+    mensagem += `\n💰 Total: R$ ${formatarPreco(total)}`
 
-    const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
-
-    window.open(url, "_blank")
-
+    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, "_blank")
     setMostrarFormulario(false)
     limparCarrinho()
     toast.success("Pedido enviado!")
-  } 
-
-  const styles = {
-  overlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000
-  },
-  modal: {
-    background: "#fff",
-    padding: "20px",
-    borderRadius: "10px",
-    width: "300px",
-    textAlign: "center"
-  },
-  input: {
-    width: "100%",
-    padding: "8px",
-    marginTop: "10px"
-  }
-}
- const confirmarAcao = () => {
-  if(acaoConfirmacao === "removerItem"){
-    removeItem(produtoSelecionado)
   }
 
-  if(acaoConfirmacao === "limparCarrinho"){
-    limparCarrinho()
+  const confirmarAcao = () => {
+    if (acaoConfirmacao === "removerItem") removeItem(produtoSelecionado)
+    if (acaoConfirmacao === "limparCarrinho") limparCarrinho()
+    setMostrarConfirmacao(false)
+    setProdutoSelecionado(null)
+    setAcaoConfirmacao(null)
   }
 
-  setMostrarConfirmacao(false)
-  setProdutoSelecionado(null)
-  setAcaoConfirmacao(null)
-}
-
-  return(
+  return (
     <>
-    <ToastContainer />
-    <h1>Seu Pedido</h1>
-    
-    {lista.length === 0 && (
-    <p>Nenhum item no pedido ainda</p>
-    )}
-    
-    {itensAgrupados.map(item => (
+      <ToastContainer />
 
-  <div key={item._id} className="bg-white rounded-lg shadow p-4 flex gap-4 items-center">
-    <img 
-      src={item.imagem || "https://picsum.photos/200"} 
-      alt={item.nome}
-      className="w-20 h-20 object-cover rounded"
-    />
-    <div className="flex-1">
-      <h3 className="font-semibold">{item.nome}</h3>
-      <p className="text-sm text-gray-500">
-        {formatarPreco(item.precoFinal)}
-      </p>
-      <div className="flex items-center gap-2 mt-2">
-        <button onClick={() => diminuir(item._id)} className="px-2 bg-gray-200 rounded">➖</button>
-        <span>{item.quantidade}</span>
-        <button onClick={() => aumentar(item)} className="px-2 bg-gray-200 rounded">➕</button>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        * { box-sizing: border-box; }
+        .pedido-input { width: 100%; padding: 10px 14px; border: 1.5px solid #e2e2e2; border-radius: 10px; font-size: 14px; font-family: inherit; color: #0f0f0f; outline: none; transition: border-color 0.15s; background: #fff; }
+        .pedido-input:focus { border-color: #0f0f0f; }
+        .btn-qty { width: 28px; height: 28px; border-radius: 8px; border: 1.5px solid #e2e2e2; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+        .btn-qty:hover { border-color: #aaa; background: #fafafa; }
+      `}</style>
+
+      <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: "#f8f8f8", minHeight: "100vh" }}>
+        <div style={{ maxWidth: 700, margin: "0 auto", padding: "32px 24px" }}>
+
+          {/* HEADER */}
+          <div style={{ marginBottom: 28 }}>
+            <h1 style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: "#0f0f0f", marginBottom: 4 }}>
+              Seu Pedido
+            </h1>
+            <p style={{ fontSize: 14, color: "#888" }}>
+              {itensAgrupados.length} {itensAgrupados.length === 1 ? "item" : "itens"} no carrinho
+            </p>
+          </div>
+
+          {/* CARRINHO VAZIO */}
+          {lista.length === 0 && (
+            <div style={{ textAlign: "center", padding: "64px 0", color: "#aaa" }}>
+              <ShoppingCart size={40} style={{ marginBottom: 12, opacity: 0.3 }} />
+              <p style={{ fontSize: 15 }}>Nenhum item no pedido ainda.</p>
+              <p style={{ fontSize: 13, marginTop: 4 }}>Volte ao catálogo e adicione produtos.</p>
+            </div>
+          )}
+
+          {/* LISTA DE ITENS */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
+            {itensAgrupados.map(item => (
+              <div key={item._id} style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 14, padding: 16, display: "flex", gap: 14, alignItems: "center" }}>
+
+                <img
+                  src={item.imagem || "https://picsum.photos/200"}
+                  alt={item.nome}
+                  style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 10, flexShrink: 0 }}
+                />
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, color: "#0f0f0f", marginBottom: 4 }}>{item.nome}</h3>
+                  <p style={{ fontSize: 13, color: "#888", marginBottom: 10 }}>{formatarPreco(item.precoFinal)} / un.</p>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <button className="btn-qty" onClick={() => diminuir(item._id)}>
+                      <Minus size={12} />
+                    </button>
+                    <span style={{ fontSize: 15, fontWeight: 600, minWidth: 20, textAlign: "center" }}>{item.quantidade}</span>
+                    <button className="btn-qty" onClick={() => aumentar(item)}>
+                      <Plus size={12} />
+                    </button>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: paleta.primaria, marginLeft: 8 }}>
+                      {formatarPreco(item.precoFinal * item.quantidade)}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => { setProdutoSelecionado(item._id); setAcaoConfirmacao("removerItem"); setMostrarConfirmacao(true) }}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 6, borderRadius: 8, transition: "background 0.15s", flexShrink: 0 }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#fef2f2"}
+                  onMouseLeave={e => e.currentTarget.style.background = "none"}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* TOTAL + BOTÕES */}
+          {lista.length > 0 && (
+            <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 14, padding: 20 }}>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <span style={{ fontSize: 15, color: "#666" }}>Total</span>
+                <span style={{ fontSize: 22, fontWeight: 700, color: "#0f0f0f", letterSpacing: "-0.02em" }}>
+                  {formatarPreco(total)}
+                </span>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <button
+                  onClick={() => setMostrarFormulario(true)}
+                  style={{ width: "100%", padding: "13px", borderRadius: 10, background: paleta.primaria, color: paleta.texto, border: "none", fontSize: 15, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: "inherit", transition: "opacity 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = 0.88}
+                  onMouseLeave={e => e.currentTarget.style.opacity = 1}
+                >
+                  <MessageCircle size={17} /> Enviar via WhatsApp
+                </button>
+
+                <button
+                  onClick={() => { setAcaoConfirmacao("limparCarrinho"); setMostrarConfirmacao(true) }}
+                  style={{ width: "100%", padding: "11px", borderRadius: 10, background: "transparent", color: "#dc2626", border: "1.5px solid #fecaca", fontSize: 14, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: "inherit", transition: "all 0.15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "#fef2f2"; e.currentTarget.style.borderColor = "#dc2626" }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "#fecaca" }}
+                >
+                  <Trash2 size={14} /> Limpar pedido
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-      <p className="mt-2 font-bold text-green-600">
-        {formatarPreco(item.precoFinal * item.quantidade)}
-      </p>
-    </div>
-    <button 
-      onClick={()=>{
-        setProdutoSelecionado(item._id)
-        setAcaoConfirmacao("removerItem")
-        setMostrarConfirmacao(true)
-      }}
-      className="text-red-500 hover:underline"
-    >
-      Remover
-    </button>
-  </div>
-  ))}
 
-  <div className="max-w-3xl mx-auto mt-6 space-y-3">
-    <h2 className="text-xl font-bold">Total: {formatarPreco(total)}</h2>
-    <button
-      onClick={() => {
-        if(lista.length === 0){
-          toast.warning("Nenhum ítem no pedido!")
-          return
-        }
-        setMostrarFormulario(true)
-      }}
-      className="w-full bg-green-600 text-white p-3 rounded hover:bg-green-700"
-    >
-      Finalizar Pedido
-    </button>
-    <button
-      onClick={()=>{
-        setMostrarConfirmacao(true)
-        setAcaoConfirmacao("limparCarrinho")
-      }}
-      className="w-full bg-red-500 text-white p-3 rounded hover:bg-red-600"
-    >
-      Limpar Pedido
-    </button>
-</div>
-      
-{mostrarFormulario && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      {/* MODAL FINALIZAR */}
+      {mostrarFormulario && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: 28, width: "100%", maxWidth: 440, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
 
-  <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg animate-[modalPop_0.35s_cubic-bezier(0.22,1,0.36,1)]">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div>
+                <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0f0f0f", marginBottom: 2 }}>Quase lá! 😄</h2>
+                <p style={{ fontSize: 13, color: "#888" }}>Preencha seus dados para finalizar</p>
+              </div>
+              <button onClick={() => setMostrarFormulario(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", padding: 4 }}>
+                <X size={18} />
+              </button>
+            </div>
 
-      <h2 className="text-xl font-bold mb-2">Quase lá 😄</h2>
-      <p className="text-gray-600 mb-4">Digite seus dados para finalizar</p>
+            <input
+              className="pedido-input"
+              type="text"
+              placeholder="Seu nome"
+              value={nomeCliente}
+              onChange={e => setNomeCliente(e.target.value)}
+              style={{ marginBottom: 10 }}
+            />
 
-      <input 
-        type="text"
-        placeholder="Seu nome"
-        value={nomeCliente}
-        onChange={(e) => setNomeCliente(e.target.value)}
-        className="w-full p-2 border rounded mb-3"
+            <input
+              className="pedido-input"
+              type="text"
+              placeholder="Seu endereço"
+              value={endereco}
+              onChange={e => setEndereco(e.target.value)}
+              style={{ marginBottom: 20 }}
+            />
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={finalizarPedido}
+                style={{ flex: 1, padding: "12px", borderRadius: 10, background: "#25d366", color: "#fff", border: "none", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: "inherit" }}
+              >
+                <MessageCircle size={16} /> Enviar WhatsApp
+              </button>
+              <button
+                onClick={() => setMostrarFormulario(false)}
+                style={{ padding: "12px 18px", borderRadius: 10, background: "#f4f4f5", color: "#555", border: "none", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}
+              >
+                Cancelar
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      <ModalConfirmacao
+        aberto={mostrarConfirmacao}
+        titulo="Tem certeza?"
+        mensagem={acaoConfirmacao === "removerItem" ? "Deseja remover este item?" : "Deseja limpar todo o pedido?"}
+        onConfirmar={confirmarAcao}
+        onCancelar={() => { setMostrarConfirmacao(false); setProdutoSelecionado(null); setAcaoConfirmacao(null) }}
       />
-
-      <input 
-        type="text"
-        placeholder="Endereço"
-        value={endereco}
-        onChange={(e) => setEndereco(e.target.value)}
-        className="w-full p-2 border rounded mb-4"
-      />
-
-      <div className="flex gap-2">
-
-        <button 
-          onClick={finalizarPedido}
-          className="flex-1 bg-green-600 text-white p-2 rounded hover:bg-green-700"
-        >
-          Enviar WhatsApp
-        </button>
-
-        <button 
-          onClick={() => setMostrarFormulario(false)}
-          className="flex-1 bg-gray-300 p-2 rounded hover:bg-gray-400"
-        >
-          Cancelar
-        </button>
-
-      </div>
-
-    </div>
-  </div>
-)}
-        <ModalConfirmacao
-      aberto={mostrarConfirmacao}
-      titulo="Tem certeza?"
-      mensagem={
-        acaoConfirmacao === "removerItem"
-          ? "Deseja remover este item?"
-          : "Deseja limpar todo o pedido?"
-      }
-      onConfirmar={confirmarAcao}
-      onCancelar={() => {
-        setMostrarConfirmacao(false)
-        setProdutoSelecionado(null)
-        setAcaoConfirmacao(null)
-  }}
-/>
     </>
   )
-  
 }
 
 export default Pedido

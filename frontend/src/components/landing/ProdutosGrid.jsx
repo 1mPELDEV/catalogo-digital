@@ -1,8 +1,9 @@
 import axios from "axios"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import formatarPreco from "../../utils/formatarpreco"
+import { gerarPaleta } from "../../utils/paleta"
 import { ShoppingCart, MessageCircle, Search, Tag, Star } from "lucide-react"
 
 const API_URL = import.meta.env.VITE_API_URL
@@ -17,7 +18,10 @@ function ProdutosGrid({ slug, loja }) {
   const [busca, setBusca] = useState("")
   const [categoriaSelecionada, setCategoriaSelecionada] = useState("")
 
-  const corPrimaria = loja?.tema?.corPrimaria || "#22c55e"
+  const paleta = useMemo(
+    () => gerarPaleta(loja?.tema?.corPrimaria),
+    [loja?.tema?.corPrimaria]
+  )
 
   const list = async () => {
     try {
@@ -97,7 +101,6 @@ function ProdutosGrid({ slug, loja }) {
 
       <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: "#f8f8f8", minHeight: "60vh" }}>
 
-        {/* BUSCA */}
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 24px 0" }}>
           <div style={{ position: "relative", maxWidth: 480 }}>
             <Search size={16} color="#aaa" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
@@ -110,12 +113,11 @@ function ProdutosGrid({ slug, loja }) {
             />
           </div>
 
-          {/* FILTRO DE CATEGORIAS */}
           {categorias.length > 0 && (
             <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
               <button
                 className={`cat-btn ${categoriaSelecionada === "" ? "ativo" : ""}`}
-                style={categoriaSelecionada === "" ? { backgroundColor: corPrimaria } : {}}
+                style={categoriaSelecionada === "" ? { backgroundColor: paleta.primaria } : {}}
                 onClick={() => setCategoriaSelecionada("")}
               >
                 Todos
@@ -124,7 +126,7 @@ function ProdutosGrid({ slug, loja }) {
                 <button
                   key={cat._id}
                   className={`cat-btn ${categoriaSelecionada === cat.nome ? "ativo" : ""}`}
-                  style={categoriaSelecionada === cat.nome ? { backgroundColor: corPrimaria } : {}}
+                  style={categoriaSelecionada === cat.nome ? { backgroundColor: paleta.primaria } : {}}
                   onClick={() => setCategoriaSelecionada(cat.nome)}
                 >
                   {cat.nome}
@@ -134,7 +136,6 @@ function ProdutosGrid({ slug, loja }) {
           )}
         </div>
 
-        {/* GRID DE PRODUTOS */}
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px" }}>
 
           {produtosOrdenados.length === 0 && (
@@ -174,7 +175,7 @@ function ProdutosGrid({ slug, loja }) {
                   <div style={{ padding: 14, flex: 1, display: "flex", flexDirection: "column" }}>
 
                     {produto.categoria && (
-                      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#888", marginBottom: 6 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, marginBottom: 6, color: paleta.maisEscura }}>
                         <Tag size={10} /> {produto.categoria}
                       </div>
                     )}
@@ -195,12 +196,12 @@ function ProdutosGrid({ slug, loja }) {
                           <p style={{ fontSize: 12, color: "#bbb", textDecoration: "line-through" }}>
                             {formatarPreco(produto.preco)}
                           </p>
-                          <p style={{ fontSize: 18, fontWeight: 600, color: corPrimaria }}>
+                          <p style={{ fontSize: 18, fontWeight: 600, color: paleta.primaria }}>
                             {formatarPreco(precoFinal)}
                           </p>
                         </>
                       ) : (
-                        <p style={{ fontSize: 18, fontWeight: 600, color: corPrimaria }}>
+                        <p style={{ fontSize: 18, fontWeight: 600, color: paleta.primaria }}>
                           {formatarPreco(produto.preco)}
                         </p>
                       )}
@@ -209,7 +210,7 @@ function ProdutosGrid({ slug, loja }) {
                     {loja?.features?.carrinho ? (
                       <button
                         className="btn-add"
-                        style={{ backgroundColor: corPrimaria }}
+                        style={{ backgroundColor: paleta.primaria }}
                         onClick={() => addItem(produto)}
                       >
                         <ShoppingCart size={15} /> Adicionar
@@ -225,7 +226,7 @@ function ProdutosGrid({ slug, loja }) {
                     )}
 
                     {loja?.features?.carrinho && quantidade > 0 && (
-                      <div className="quantidade-badge">
+                      <div className="quantidade-badge" style={{ color: paleta.escura }}>
                         <ShoppingCart size={11} /> {quantidade} no pedido
                       </div>
                     )}

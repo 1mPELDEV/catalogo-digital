@@ -1,6 +1,8 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useLoja } from "../hooks/useLoja"
+import { gerarPaleta } from "../utils/paleta"
+import { ShoppingCart, Store, LogOut, LayoutGrid } from "lucide-react"
 
 function Navbar() {
   const [logado, setLogado] = useState(false)
@@ -9,167 +11,122 @@ function Navbar() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  // pega slug da URL
-  const slugAtual =
-    location.pathname.split("/")[1] || null
+  const slugAtual = location.pathname.split("/")[1] || null
+  const rotasInternas = ["admin", "login", "cadastro", "pedido", "master"]
 
-  let exibeslug = function() {
-    console.log(slugAtual)
+  let slugDaLoja = null
+  if (slugAtual && !rotasInternas.includes(slugAtual)) {
+    slugDaLoja = slugAtual
+  } else {
+    slugDaLoja = localStorage.getItem("slugLoja")
   }
-  exibeslug()
 
-  const rotasInternas = [
-    "admin",
-    "login",
-    "cadastro",
-    "pedido",
-    "master"
-  ]
+  const loja = useLoja(slugDaLoja)
 
-// const isCatalog = slugAtual && !rotasInternas.includes(slugAtual)
+  const paleta = useMemo(
+    () => gerarPaleta(loja?.tema?.corPrimaria),
+    [loja?.tema?.corPrimaria]
+  )
 
-  let slugDaLoja =  null 
-
-
-    if (slugAtual && !rotasInternas.includes(slugAtual)) {
-      slugDaLoja = slugAtual
-    } else {
-      slugDaLoja = localStorage.getItem("slugLoja")
-    }
-
-
-const loja = useLoja(slugDaLoja)
-
-console.log(localStorage.getItem("token"))
-
-  // loja tá vindo null porque slug atual tá sendo "admin" e não o slug da loja, então useLoja não consegue encontrar a loja correta.
-  console.log("loja", loja)
-
-  const corPrimaria =
-    loja?.tema?.corPrimaria || "#22c55e"
-
-  // carrega infos iniciais
   useEffect(() => {
     const token = localStorage.getItem("token")
     setLogado(!!token)
-
-    const carrinho = JSON.parse(
-      localStorage.getItem(`carrinho-${slugDaLoja}`)) || []
-
-      console.log("carrinho", carrinho)
-
+    const carrinho = JSON.parse(localStorage.getItem(`carrinho-${slugDaLoja}`)) || []
     setQuantidade(carrinho.length)
   }, [])
 
-  // escuta mudanças
   useEffect(() => {
     const atualizar = () => {
-      const token =
-        localStorage.getItem("token")
-
-      setLogado(!!token)
-
-      const carrinho =
-      JSON.parse(
-        localStorage.getItem(`carrinho-${slugDaLoja}`)
-      ) || []
-
+      setLogado(!!localStorage.getItem("token"))
+      const carrinho = JSON.parse(localStorage.getItem(`carrinho-${slugDaLoja}`)) || []
       setQuantidade(carrinho.length)
     }
-
-    window.addEventListener(
-      "storage",
-      atualizar
-    )
-
-    return () => {
-      window.removeEventListener(
-        "storage",
-        atualizar
-      )
-    }
-  }, [])
+    window.addEventListener("storage", atualizar)
+    return () => window.removeEventListener("storage", atualizar)
+  }, [slugDaLoja])
 
   const sair = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("slugLoja")
-
     setLogado(false)
-
     navigate("/login")
   }
 
   return (
-    <nav
-      className="text-white shadow-md"
-      style={{
-        backgroundColor: corPrimaria
-      }}
-    >
-      <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        .nav-link { font-size: 14px; font-weight: 500; text-decoration: none; padding: 6px 10px; border-radius: 8px; transition: background 0.15s; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+        .nav-link:hover { background: rgba(128,128,128,0.15); }
+        .nav-btn-sair { font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; transition: background 0.15s; background: rgba(220,38,38,0.15); color: #ef4444; }
+        .nav-btn-sair:hover { background: rgba(220,38,38,0.25); }
+        .carrinho-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; text-decoration: none; padding: 6px 12px; border-radius: 8px; transition: background 0.15s; font-family: inherit; position: relative; }
+        .carrinho-badge:hover { background: rgba(128,128,128,0.15); }
+        .badge-count { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; background: #ef4444; color: #fff; }
+      `}</style>
 
-        {/* Logo + Nome */}
-        <div className="flex items-center gap-3">
-          {loja?.logo && (
-            <img
-              src={`http://localhost:8082/uploads/${loja.logo}`}
-              alt={loja.nome}
-              className="w-10 h-10 rounded-full object-cover border border-white"
-            />
-          )}
+      <nav style={{
+        background: paleta.primaria,
+        borderBottom: `1px solid ${paleta.borda}`,
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
+        fontFamily: "'Inter', -apple-system, sans-serif"
+      }}>
+        <div style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "0 24px",
+          height: 60,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 16
+        }}>
 
-          <h1 className="text-xl font-bold">
-            {loja?.nome || "Seu Catálogo"}
-          </h1>
+          <Link to={slugDaLoja ? `/${slugDaLoja}` : "/"} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+            {loja?.logo ? (
+              <img src={loja.logo} alt={loja.nome} style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: `2px solid ${paleta.borda}` }} />
+            ) : (
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: paleta.fundoMedio, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Store size={17} color={paleta.texto} />
+              </div>
+            )}
+            <span style={{ fontSize: 15, fontWeight: 600, color: paleta.texto, letterSpacing: "-0.01em" }}>
+              {loja?.nome || "Catálogo Digital"}
+            </span>
+          </Link>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            {slugDaLoja && (
+              <>
+                <Link to={`/${slugDaLoja}`} className="nav-link" style={{ color: paleta.textoSuave }}>
+                  <LayoutGrid size={14} /> Catálogo
+                </Link>
+                <Link to={`/${slugDaLoja}/pedido`} className="carrinho-badge" style={{ color: paleta.textoSuave }}>
+                  <ShoppingCart size={15} />
+                  Pedido
+                  {quantidade > 0 && (
+                    <span className="badge-count">{quantidade > 9 ? "9+" : quantidade}</span>
+                  )}
+                </Link>
+              </>
+            )}
+            {logado && (
+              <>
+                <Link to="/admin" className="nav-link" style={{ color: paleta.textoSuave }}>
+                  Admin
+                </Link>
+                <button onClick={sair} className="nav-btn-sair">
+                  <LogOut size={13} /> Sair
+                </button>
+              </>
+            )}
+          </div>
+
         </div>
-
-        {/* Links */}
-        <div className="flex items-center gap-4 text-sm md:text-base">
-
-          {/* catálogo */}
-          {slugDaLoja && (
-            <>
-            <Link
-              to={`/${slugDaLoja}`}
-              className="hover:opacity-80 transition"
-            >
-              Catálogo
-            </Link>
-
-              <Link
-                to={`/${slugDaLoja}/pedido`}
-                className="hover:opacity-80 transition"
-              >
-                Pedido 🛒 ({quantidade})
-              </Link>
-            </>
-            
-          )}
-
-          {/* links privados */}
-          {logado ? (
-            <>
-              <Link
-                to="/admin"
-                className="hover:opacity-80 transition"
-              >
-                Admin
-              </Link>
-
-              <button
-                onClick={sair}
-                className="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition"
-              >
-                Sair
-              </button>
-            </>
-          ) : 
-            <>
-            </>
-          }
-        </div>
-      </div>
-    </nav>
+      </nav>
+    </>
   )
 }
 
