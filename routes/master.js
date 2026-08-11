@@ -5,8 +5,13 @@ const bcrypt = require("bcrypt")
 const Loja = require("../models/Loja")
 const Admin = require("../models/Admin")
 
+const { verificaToken } = require("../middlewares/authMiddleware")
+const { somenteMaster } = require("../middlewares/masterMiddleware")
+
+router.use(verificaToken, somenteMaster)
+
 // listar lojas
-router.get("/lojas", async (req, res) => {
+router.get("/lojas",  async (req, res) => {
   try {
 
     const lojas = await Loja.find()
@@ -108,9 +113,7 @@ router.post("/lojas", async (req, res) => {
 })
 
 // deletar loja
-router.delete(
-  "/lojas/:id",
-  async (req, res) => {
+router.delete ( "/lojas/:id", async (req, res) => {
 
     try {
 
