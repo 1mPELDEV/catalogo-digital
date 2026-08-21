@@ -34,14 +34,52 @@ router.get("/:slug", async (req, res) => {
 // PUT privado — admin atualizando sua loja
 router.put("/", verificaToken, async (req, res) => {
   try {
+
+    const dadosPermitidos = {}
+
+    if (req.body.nome !== undefined) {
+      dadosPermitidos.nome = req.body.nome
+    }
+
+    if (req.body.logo !== undefined) {
+      dadosPermitidos.logo = req.body.logo
+    }
+
+    if (req.body.banner !== undefined) {
+      dadosPermitidos.banner = req.body.banner
+    }
+
+    if (req.body.tema?.corPrimaria !== undefined) {
+      dadosPermitidos["tema.corPrimaria"] = req.body.tema.corPrimaria
+    }
+
+    if (req.body.contato?.whatsapp !== undefined) {
+      dadosPermitidos["contato.whatsapp"] = req.body.contato.whatsapp
+    }
+
     const loja = await Loja.findOneAndUpdate(
       { adminId: req.adminId },
-      req.body,
-      { new: true }
+      { $set: dadosPermitidos },
+      {
+        new: true,
+        runValidators: true
+      }
     )
+
+    if (!loja) {
+      return res.status(404).json({
+        erro: "Loja não encontrada"
+      })
+    }
+
     res.json(loja)
+
   } catch (err) {
-    res.status(500).json({ erro: "Erro ao atualizar loja" })
+    console.error(err)
+
+    res.status(500).json({
+      erro: "Erro ao atualizar loja"
+    })
   }
 })
 
