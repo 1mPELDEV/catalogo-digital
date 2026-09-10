@@ -8,10 +8,12 @@ const { verificaToken } =
 require('../middlewares/authMiddleware')
 
 const upload = require('../config/multer')
+const { uploadImagem } = require("../middlewares/multerMiddleware")
+
 
 
 // CREATE
-router.post('/', verificaToken, upload.single('imagem'), async (req, res) => {
+router.post('/', verificaToken, uploadImagem, async (req, res) => {
   try {
     if (!req.body.nome || !req.body.preco) {
       return res.status(400).json({ erro: "Nome e preço são obrigatórios" })
