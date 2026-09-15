@@ -4,7 +4,7 @@ import axios from "axios"
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import ModalConfirmacao from '../components/modalConfirmacao'
-import { Package, Plus, Pencil, Trash2, Tag, ChevronRight, X, Upload, Link as LinkIcon, Image } from 'lucide-react'
+import { Package, Plus, Pencil, Trash2, Tag, ChevronRight, X, Image } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -12,10 +12,9 @@ function Admin() {
   const [produtos, setProdutos] = useState([])
   const [nome, setNome] = useState('')
   const [preco, setPreco] = useState('')
-  const [imagem, setImagem] = useState('')
   const [imagemFile, setImagemFile] = useState(null)
   const [imagemPreview, setImagemPreview] = useState("")
-  const [modoImagem, setModoImagem] = useState("url") // "url" | "file"
+  const [imagemAtual, setImagemAtual] = useState("") // URL já salva no produto (edição)
   const [descricao, setDescricao] = useState('')
   const [editandoId, setEditandoId] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -87,10 +86,10 @@ function Admin() {
   }, [])
 
   const limparForm = () => {
-    setNome(''); setPreco(''); setDescricao(''); setImagem('')
+    setNome(''); setPreco(''); setDescricao('')
     setCategoria(''); setDesconto(0); setPromocao(false); setEditandoId(null)
     setMostrarForm(false); setMostrarFormCategoria(false); setNomeCategoria("")
-    setImagemFile(null); setImagemPreview(""); setModoImagem("url")
+    setImagemFile(null); setImagemPreview(""); setImagemAtual("")
   }
 
   const buildFormData = () => {
@@ -102,7 +101,7 @@ function Admin() {
     fd.append("promocao_ativa", promocao)
     fd.append("promocao_desconto", desconto)
     if (imagemFile) fd.append("imagem", imagemFile)
-    else if (imagem) fd.append("imagem", imagem)
+    else if (imagemAtual) fd.append("imagem", imagemAtual)
     return fd
   }
 
@@ -140,9 +139,9 @@ function Admin() {
     setNome(produto.nome)
     setPreco(produto.preco)
     setDescricao(produto.descricao || '')
-    setImagem(produto.imagem || '')
+    setImagemFile(null)
+    setImagemAtual(produto.imagem || '')
     setImagemPreview(produto.imagem || '')
-    setModoImagem(produto.imagem ? "url" : "url")
     setEditandoId(produto._id)
     setCategoria(produto.categoria || "")
     setDesconto(produto.promocao?.desconto || 0)
@@ -155,10 +154,7 @@ function Admin() {
     if (!file) return
     setImagemFile(file)
     setImagemPreview(URL.createObjectURL(file))
-    setImagem("")
   }
-
-  const preview = imagemPreview || imagem
 
   return (
     <>
@@ -186,10 +182,6 @@ function Admin() {
         .cat-chip { display: inline-flex; align-items: center; gap: 6px; background: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 8px; padding: 5px 10px; font-size: 13px; color: #333; }
         .cat-chip button { background: none; border: none; cursor: pointer; color: #aaa; display: flex; padding: 0; transition: color 0.15s; }
         .cat-chip button:hover { color: #dc2626; }
-        .modo-tab { padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; transition: all 0.15s; }
-        .modo-tab.ativo { background: #0f0f0f; color: #fff; }
-        .modo-tab.inativo { background: transparent; color: #888; }
-        .modo-tab.inativo:hover { background: #f0f0f0; color: #333; }
         .dropzone { border: 1.5px dashed #d4d4d4; border-radius: 12px; padding: 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: border-color 0.15s, background 0.15s; background: #fafafa; }
         .dropzone:hover { border-color: #aaa; background: #f4f4f4; }
         .dropzone.tem-imagem { padding: 0; border-style: solid; border-color: #e2e2e2; overflow: hidden; }
@@ -225,73 +217,41 @@ function Admin() {
               {/* DESCRIÇÃO */}
               <input className="admin-input" placeholder="Descrição" value={descricao} onChange={e => setDescricao(e.target.value)} style={{ marginBottom: 16 }} />
 
-              {/* IMAGEM */}
+              {/* IMAGEM — somente upload */}
               <div style={{ marginBottom: 16 }}>
                 <p style={{ fontSize: 13, fontWeight: 500, color: "#555", marginBottom: 8 }}>Imagem do produto</p>
 
-                {/* TABS URL / ARQUIVO */}
-                <div style={{ display: "flex", gap: 4, marginBottom: 12, background: "#f4f4f5", padding: 4, borderRadius: 10, width: "fit-content" }}>
-                  <button
-                    className={`modo-tab ${modoImagem === "url" ? "ativo" : "inativo"}`}
-                    onClick={() => { setModoImagem("url"); setImagemFile(null); setImagemPreview("") }}
-                  >
-                    <LinkIcon size={13} /> URL
-                  </button>
-                  <button
-                    className={`modo-tab ${modoImagem === "file" ? "ativo" : "inativo"}`}
-                    onClick={() => { setModoImagem("file"); setImagem("") }}
-                  >
-                    <Upload size={13} /> Upload
-                  </button>
-                </div>
-
-                {modoImagem === "url" ? (
-                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <input
-                      className="admin-input"
-                      placeholder="https://exemplo.com/imagem.jpg"
-                      value={imagem}
-                      onChange={e => { setImagem(e.target.value); setImagemPreview("") }}
-                    />
-                    {imagem && (
-                      <img src={imagem} alt="" style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 8, border: "1px solid #f0f0f0", flexShrink: 0 }} />
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      ref={fileInputRef}
-                      style={{ display: "none" }}
-                      onChange={e => handleFile(e.target.files[0])}
-                    />
-                    <div
-                      className={`dropzone ${preview ? "tem-imagem" : ""}`}
-                      onClick={() => fileInputRef.current?.click()}
-                      onDragOver={e => e.preventDefault()}
-                      onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }}
-                    >
-                      {preview ? (
-                        <div style={{ position: "relative", width: "100%" }}>
-                          <img src={preview} alt="" style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
-                          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "all 0.15s" }}
-                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.4)"; e.currentTarget.style.opacity = 1 }}
-                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0)"; e.currentTarget.style.opacity = 0 }}
-                          >
-                            <span style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>Trocar imagem</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <Image size={28} color="#ccc" />
-                          <p style={{ fontSize: 14, color: "#888", margin: 0 }}>Clique ou arraste uma imagem</p>
-                          <p style={{ fontSize: 12, color: "#bbb", margin: 0 }}>JPG, PNG, WEBP até 5MB</p>
-                        </>
-                      )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  onChange={e => handleFile(e.target.files[0])}
+                />
+                <div
+                  className={`dropzone ${imagemPreview ? "tem-imagem" : ""}`}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }}
+                >
+                  {imagemPreview ? (
+                    <div style={{ position: "relative", width: "100%" }}>
+                      <img src={imagemPreview} alt="" style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
+                      <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "all 0.15s" }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.4)"; e.currentTarget.style.opacity = 1 }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0)"; e.currentTarget.style.opacity = 0 }}
+                      >
+                        <span style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>Trocar imagem</span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <>
+                      <Image size={28} color="#ccc" />
+                      <p style={{ fontSize: 14, color: "#888", margin: 0 }}>Clique ou arraste uma imagem</p>
+                      <p style={{ fontSize: 12, color: "#bbb", margin: 0 }}>JPG, PNG, WEBP até 5MB</p>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* CATEGORIA */}

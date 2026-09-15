@@ -7,7 +7,6 @@ const Loja = require("../models/Loja")
 const { verificaToken } =
 require('../middlewares/authMiddleware')
 
-const upload = require('../config/multer')
 const { uploadImagem } = require("../middlewares/multerMiddleware")
 
 
@@ -24,7 +23,7 @@ router.post('/', verificaToken, uploadImagem, async (req, res) => {
       preco: req.body.preco,
       descricao: req.body.descricao,
       categoria: req.body.categoria,
-      imagem: req.file ? req.file.path : req.body.imagem,
+      imagem: req.file ? req.file.path : undefined,
       lojaId: req.admin.lojaId,
       promocao: {
         ativa: req.body.promocao_ativa === "true" || req.body.promocao?.ativa || false,
@@ -100,7 +99,7 @@ router.get('/', verificaToken, async (req, res) => {
 
 
 // UPDATE
-router.put('/:id', verificaToken, upload.single('imagem'), async (req, res) => {
+router.put('/:id', verificaToken, uploadImagem, async (req, res) => {
   try {
     const dados = {
       nome: req.body.nome,
@@ -115,8 +114,6 @@ router.put('/:id', verificaToken, upload.single('imagem'), async (req, res) => {
 
     if (req.file) {
       dados.imagem = req.file.path
-    } else if (req.body.imagem) {
-      dados.imagem = req.body.imagem
     }
 
     const produtoAtualizado = await Produto.findOneAndUpdate(
