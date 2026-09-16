@@ -21,7 +21,9 @@ const mongoose = require('mongoose')
     // importando cors
 const cors = require('cors')
 
-app.use(cors())
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+}))
 
 
 //Middleweres
