@@ -6,7 +6,9 @@ const bcrypt = require("bcrypt")
 const Admin = require('../models/Admin')
 const Loja = require("../models/Loja")
 
-router.post('/login', async (req, res) => {
+const loginLimiter = require("../middlewares/ratelimitMiddleware")
+
+router.post('/login', loginLimiter,  async (req, res) => {
 
   try {
 
@@ -27,7 +29,7 @@ router.post('/login', async (req, res) => {
 
     if (!senhaCorreta) {
       return res.status(401).json({
-        erro: "Senha incorreta"
+        erro: "Credenciais inválidas"
       })
     }
 

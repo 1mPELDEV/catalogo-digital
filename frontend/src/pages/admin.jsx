@@ -193,7 +193,7 @@ function Admin() {
           {/* HEADER */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
             <div>
-              <h1 style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: "#0f0f0f", marginBottom: 4 }}>Produtos</h1>
+              <h1 style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: "#0f0f0f", marginBottom: 4 }}>Seus Produtos:</h1>
               <p style={{ fontSize: 14, color: "#888" }}>{produtos.length} produto{produtos.length !== 1 ? "s" : ""} cadastrado{produtos.length !== 1 ? "s" : ""}</p>
             </div>
             <button className="btn-dark" onClick={() => { limparForm(); setMostrarForm(!mostrarForm) }}>
