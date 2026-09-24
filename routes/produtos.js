@@ -20,7 +20,7 @@ router.post('/', verificaToken, uploadImagem, async (req, res) => {
 
     const novoProduto = new Produto({
       nome: req.body.nome,
-      preco: req.body.preco,
+      preco: Number(req.body.preco),
       descricao: req.body.descricao,
       categoria: req.body.categoria,
       imagem: req.file ? req.file.path : undefined,
@@ -31,7 +31,17 @@ router.post('/', verificaToken, uploadImagem, async (req, res) => {
       }
     })
 
+    if ( !Number.isFinite(novoProduto.preco)  || novoProduto.preco <= 0) {
+      return res.status(400).json({ erro: "Preço inválido" })
+    }
+
+    if (novoProduto.promocao.ativa && (!Number.isFinite(novoProduto.promocao.desconto)
+      || novoProduto.promocao.desconto <= 0 || novoProduto.promocao.desconto >= novoProduto.preco)) {
+      return res.status(400).json({ erro: "Desconto inválido" })
+    }
+
     await novoProduto.save()
+
     res.status(201).json(novoProduto)
   } catch (err) {
     console.log(err)
@@ -103,13 +113,21 @@ router.put('/:id', verificaToken, uploadImagem, async (req, res) => {
   try {
     const dados = {
       nome: req.body.nome,
-      preco: req.body.preco,
+      preco: Number(req.body.preco),
       descricao: req.body.descricao,
       categoria: req.body.categoria,
       promocao: {
         ativa: req.body.promocao_ativa === "true" || false,
         desconto: Number(req.body.promocao_desconto || 0)
       }
+    }
+
+    if (!Number.isFinite(dados.preco) || dados.preco <= 0) {
+      return res.status(400).json({ erro: "Preço inválido" })
+    }
+    if (dados.promocao.ativa && (!Number.isFinite(dados.promocao.desconto) 
+      || dados.promocao.desconto <= 0 || dados.promocao.desconto >= dados.preco)) {
+      return res.status(400).json({ erro: "Desconto inválido" })
     }
 
     if (req.file) {
