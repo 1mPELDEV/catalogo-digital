@@ -10,6 +10,7 @@ const { somenteMaster } = require("../middlewares/masterMiddleware")
 
 router.use(verificaToken, somenteMaster)
 
+
 // listar lojas
 router.get("/lojas",  async (req, res) => {
   try {

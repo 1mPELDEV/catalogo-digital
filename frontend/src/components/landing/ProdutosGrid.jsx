@@ -1,4 +1,5 @@
 import axios from "axios"
+import { Link } from "react-router-dom"
 import { useState, useEffect, useMemo } from "react"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
@@ -54,7 +55,9 @@ function ProdutosGrid({ slug, loja }) {
       : produto.preco
 
     const produtoComPreco = { ...produto, precoFinal }
+    console.log("produtoComPreco", produtoComPreco)
     const novaLista = [...lista, produtoComPreco]
+    console.log("novaLista", novaLista)
 
     setLista(novaLista)
     toast.success("Produto adicionado ao pedido!")
@@ -79,6 +82,10 @@ function ProdutosGrid({ slug, loja }) {
   const produtosOrdenados = [...produtosFiltrados].sort((a, b) => {
     return (b.promocao?.ativa ? 1 : 0) - (a.promocao?.ativa ? 1 : 0)
   })
+
+  // fixed bar 
+
+   const total = lista.reduce((acc, item) => acc + item.precoFinal, 0)
 
   return (
     <>
@@ -237,6 +244,39 @@ function ProdutosGrid({ slug, loja }) {
             })}
           </div>
         </div>
+        {/* fixed bar */}
+          {loja?.features?.carrinho && lista.length > 0 && (
+            <div className="fixed bottom-4 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center justify-between gap-4 rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-black/5">
+
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-white"
+                  style={{ backgroundColor: paleta.primaria }}
+                >
+                  <ShoppingCart size={18} />
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {lista.length} {lista.length === 1 ? "item" : "itens"}
+                  </p>
+
+                  <p className="text-xs text-gray-500">
+                    {formatarPreco(total)}
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                to={`/${slug}/pedido`}
+                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: paleta.primaria }}
+              >
+                Ver pedido
+              </Link>
+
+            </div>
+          )}
       </div>
     </>
   )
