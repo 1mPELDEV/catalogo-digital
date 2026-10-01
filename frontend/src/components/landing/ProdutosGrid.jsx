@@ -9,6 +9,14 @@ import { ShoppingCart, MessageCircle, Search, Tag, Star } from "lucide-react"
 
 const API_URL = import.meta.env.VITE_API_URL
 
+const IMAGEM_FALLBACK = "https://picsum.photos/200"
+
+// Preço com desconto aplicado (quando houver promoção ativa)
+const calcularPrecoFinal = (produto) =>
+  produto.promocao?.ativa
+    ? produto.preco - produto.promocao.desconto
+    : produto.preco
+
 function ProdutosGrid({ slug, loja }) {
 
   const chaveLocalStorage = `carrinho-${slug}`
@@ -50,14 +58,9 @@ function ProdutosGrid({ slug, loja }) {
   }, [slug])
 
   const addItem = (produto) => {
-    const precoFinal = produto.promocao?.ativa
-      ? produto.preco - produto.promocao.desconto
-      : produto.preco
+    const produtoComPreco = { ...produto, precoFinal: calcularPrecoFinal(produto) }
 
-    const produtoComPreco = { ...produto, precoFinal }
-    console.log("produtoComPreco", produtoComPreco)
     const novaLista = [...lista, produtoComPreco]
-    console.log("novaLista", novaLista)
 
     setLista(novaLista)
     toast.success("Produto adicionado ao pedido!")
@@ -65,13 +68,27 @@ function ProdutosGrid({ slug, loja }) {
     window.dispatchEvent(new Event("storage"))
   }
 
+  const diminuir = (id) => {
+    const index = lista.findIndex(item => item._id === id)
+
+    if (index === -1) return
+
+    const novaLista = [...lista]
+    novaLista.splice(index, 1)
+
+    setLista(novaLista)
+    localStorage.setItem(chaveLocalStorage, JSON.stringify(novaLista))
+    window.dispatchEvent(new Event("storage"))
+  }
+
   const abrirWhatsApp = (produto) => {
-    const numero = loja?.contato?.whatsapp
+    // Remove +, espaços, parênteses e hífens para gerar um link válido
+    const numero = loja?.contato?.whatsapp?.replace(/\D/g, "")
     if (!numero) {
       toast.error("Esta loja ainda não configurou o WhatsApp!")
       return
     }
-    const mensagem = `Olá! Tenho interesse no produto:\n\n🛒 ${produto.nome}\n💰 ${formatarPreco(produto.preco)}\n\nPode me dar mais informações?`
+    const mensagem = `Olá! Tenho interesse no produto:\n\n🛒 ${produto.nome}\n💰 ${formatarPreco(calcularPrecoFinal(produto))}\n\nPode me dar mais informações?`
     window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, "_blank")
   }
 
@@ -83,9 +100,10 @@ function ProdutosGrid({ slug, loja }) {
     return (b.promocao?.ativa ? 1 : 0) - (a.promocao?.ativa ? 1 : 0)
   })
 
-  // fixed bar 
+  // Itens antigos no localStorage podem não ter precoFinal
+  const total = lista.reduce((acc, item) => acc + (item.precoFinal ?? item.preco), 0)
 
-   const total = lista.reduce((acc, item) => acc + item.precoFinal, 0)
+  const barraVisivel = loja?.features?.carrinho && lista.length > 0
 
   return (
     <>
@@ -103,10 +121,17 @@ function ProdutosGrid({ slug, loja }) {
         .promo-badge { position: absolute; top: 10px; left: 10px; background: #dc2626; color: #fff; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; display: flex; align-items: center; gap: 4px; }
         .btn-add { width: 100%; padding: 11px; border-radius: 10px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; transition: opacity 0.15s; color: #fff; }
         .btn-add:hover { opacity: 0.88; }
-        .quantidade-badge { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #666; margin-top: 6px; justify-content: center; }
       `}</style>
 
-      <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: "#f8f8f8", minHeight: "60vh" }}>
+      <div
+        style={{
+          fontFamily: "'Inter', -apple-system, sans-serif",
+          background: "#f8f8f8",
+          minHeight: "60vh",
+          // Reserva espaço para a barra fixa não cobrir os últimos produtos
+          paddingBottom: barraVisivel ? 100 : 0,
+        }}
+      >
 
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 24px 0" }}>
           <div style={{ position: "relative", maxWidth: 480 }}>
@@ -158,19 +183,21 @@ function ProdutosGrid({ slug, loja }) {
                 ? lista.filter(item => item._id === produto._id).length
                 : 0
 
-              const precoFinal = produto.promocao?.ativa
-                ? produto.preco - produto.promocao.desconto
-                : produto.preco
+              const precoFinal = calcularPrecoFinal(produto)
 
               return (
                 <div key={produto._id} className="produto-card">
 
                   <div style={{ position: "relative" }}>
                     <img
-                      src={produto.imagem || "https://picsum.photos/200"}
+                      src={produto.imagem || IMAGEM_FALLBACK}
                       alt={produto.nome}
                       style={{ width: "100%", height: 180, objectFit: "cover" }}
-                      onError={e => e.target.src = "https://picsum.photos/200"}
+                      onError={e => {
+                        // Evita loop infinito se o fallback também falhar
+                        e.target.onerror = null
+                        e.target.src = IMAGEM_FALLBACK
+                      }}
                     />
                     {produto.promocao?.ativa && (
                       <span className="promo-badge">
@@ -215,13 +242,43 @@ function ProdutosGrid({ slug, loja }) {
                     </div>
 
                     {loja?.features?.carrinho ? (
-                      <button
-                        className="btn-add"
-                        style={{ backgroundColor: paleta.primaria }}
-                        onClick={() => addItem(produto)}
-                      >
-                        <ShoppingCart size={15} /> Adicionar
-                      </button>
+                      quantidade === 0 ? (
+                        <button
+                          className="btn-add"
+                          style={{ backgroundColor: paleta.primaria }}
+                          onClick={() => addItem(produto)}
+                        >
+                          <ShoppingCart size={15} /> Adicionar
+                        </button>
+                      ) : (
+                        <div className="flex items-center justify-between gap-2">
+
+                          <button
+                            onClick={() => diminuir(produto._id)}
+                            aria-label={`Remover uma unidade de ${produto.nome}`}
+                            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition hover:bg-gray-100"
+                          >
+                            −
+                          </button>
+
+                          <div className="flex flex-1 items-center justify-center gap-2">
+                            <ShoppingCart size={15} />
+                            <span className="text-sm font-semibold">
+                              {quantidade}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() => addItem(produto)}
+                            aria-label={`Adicionar mais uma unidade de ${produto.nome}`}
+                            className="flex h-10 w-10 items-center justify-center rounded-xl text-white transition-opacity hover:opacity-90"
+                            style={{ backgroundColor: paleta.primaria }}
+                          >
+                            +
+                          </button>
+
+                        </div>
+                      )
                     ) : (
                       <button
                         className="btn-add"
@@ -232,51 +289,46 @@ function ProdutosGrid({ slug, loja }) {
                       </button>
                     )}
 
-                    {loja?.features?.carrinho && quantidade > 0 && (
-                      <div className="quantidade-badge" style={{ color: paleta.escura }}>
-                        <ShoppingCart size={11} /> {quantidade} no pedido
-                      </div>
-                    )}
-
                   </div>
                 </div>
               )
             })}
           </div>
         </div>
-        {/* fixed bar */}
-          {loja?.features?.carrinho && lista.length > 0 && (
-            <div className="fixed bottom-4 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center justify-between gap-4 rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-black/5">
 
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-white"
-                  style={{ backgroundColor: paleta.primaria }}
-                >
-                  <ShoppingCart size={18} />
-                </div>
+        {/* Barra fixa do carrinho */}
+        {barraVisivel && (
+          <div className="fixed bottom-4 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center justify-between gap-4 rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-black/5">
 
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {lista.length} {lista.length === 1 ? "item" : "itens"}
-                  </p>
-
-                  <p className="text-xs text-gray-500">
-                    {formatarPreco(total)}
-                  </p>
-                </div>
-              </div>
-
-              <Link
-                to={`/${slug}/pedido`}
-                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-full text-white"
                 style={{ backgroundColor: paleta.primaria }}
               >
-                Ver pedido
-              </Link>
+                <ShoppingCart size={18} />
+              </div>
 
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  {lista.length} {lista.length === 1 ? "item" : "itens"}
+                </p>
+
+                <p className="text-xs text-gray-500">
+                  {formatarPreco(total)}
+                </p>
+              </div>
             </div>
-          )}
+
+            <Link
+              to={`/${slug}/pedido`}
+              className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              style={{ backgroundColor: paleta.primaria }}
+            >
+              Ver pedido
+            </Link>
+
+          </div>
+        )}
       </div>
     </>
   )
