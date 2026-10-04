@@ -13,6 +13,7 @@ import Landing from "./pages/Landing"
 import Master from "./pages/Master"
 import Home from "./pages/Home"
 import Welcome from "./pages/Welcome"
+import Interesse from "./pages/Interesse"
 import Footer from "./components/Footer"
 import Navbar from "./components/navbar"
 
@@ -62,6 +63,8 @@ function Layout() {
           path="/cadastro"
           element={<Cadastro />}
         />
+
+        <Route path="/interesse" element={<Interesse />} />
 
         <Route
         path="/welcome"

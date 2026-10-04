@@ -18,7 +18,7 @@ function Navbar() {
   const navigate = useNavigate()
 
   const slugAtual = location.pathname.split("/")[1] || null
-  const rotasInternas = ["admin", "login", "cadastro", "pedido", "master", "welcome"]
+  const rotasInternas = ["admin", "login", "cadastro", "interesse", "pedido", "master", "welcome"]
   const paginaPublicaLoja = Boolean(slugAtual && !rotasInternas.includes(slugAtual))
 
   let slugSolicitado = null

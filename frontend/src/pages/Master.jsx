@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 
+const API_URL = import.meta.env.VITE_API_URL
+
 function Master() {
 
   const [nomeLoja, setNomeLoja] =
@@ -14,6 +16,9 @@ function Master() {
 
   const [lojas, setLojas] =
     useState([])
+  const [interesses, setInteresses] = useState([])
+  const token = localStorage.getItem("token")
+  const headers = { Authorization: `Bearer ${token}` }
 
   const [features, setFeatures] =
     useState({
@@ -32,7 +37,7 @@ function Master() {
   async function buscarLojas() {
     try {
       const res = await axios.get(
-        "http://localhost:8082/master/lojas"
+        `${API_URL}/master/lojas`, { headers }
       )
 
       setLojas(res.data)
@@ -42,9 +47,29 @@ function Master() {
     }
   }
 
+  async function buscarInteresses() {
+    try {
+      const res = await axios.get(`${API_URL}/master/interesses`, { headers })
+      setInteresses(res.data)
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
   useEffect(() => {
     buscarLojas()
+    buscarInteresses()
   }, [])
+
+  async function confirmarPagamento(id) {
+    try {
+      await axios.patch(`${API_URL}/master/interesses/${id}/confirmar`, {}, { headers })
+      buscarInteresses()
+      alert("Pagamento confirmado. O interessado já pode criar a conta com este e-mail.")
+    } catch (err) {
+      alert(err.response?.data?.erro || "Erro ao confirmar pagamento")
+    }
+  }
 
   async function criarLoja(e) {
     e.preventDefault()
@@ -52,13 +77,13 @@ function Master() {
     try {
 
       await axios.post(
-        "http://localhost:8082/master/lojas",
+        `${API_URL}/master/lojas`,
         {
           nomeLoja,
           email,
           senha,
           features
-        }
+        }, { headers }
       )
 
       alert("Loja criada 🚀")
@@ -93,7 +118,7 @@ function Master() {
     try {
 
       await axios.delete(
-        `http://localhost:8082/master/lojas/${id}`
+        `${API_URL}/master/lojas/${id}`, { headers }
       )
 
       buscarLojas()
@@ -120,6 +145,14 @@ function Master() {
       <h1 className="text-3xl font-bold mb-6">
         Painel Master 👑
       </h1>
+
+      <section className="mb-6 rounded-xl bg-white p-6 shadow">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div><h2 className="text-xl font-bold">Interesses no plano anual</h2><p className="mt-1 text-sm text-gray-500">R$ 200 por 12 meses · confirme manualmente após receber o pagamento.</p></div>
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">{interesses.filter(item => item.status === "pendente").length} pendentes</span>
+        </div>
+        {interesses.length === 0 ? <p className="text-sm text-gray-500">Nenhum interessado por enquanto.</p> : <div className="space-y-3">{interesses.map(item => <div key={item._id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4"><div><p className="font-semibold">{item.email}</p><p className="mt-1 text-xs text-gray-500">{new Date(item.criadoEm).toLocaleString("pt-BR")} · {item.status === "pendente" ? "Aguardando pagamento" : item.status === "pago" ? "Pago · cadastro liberado" : item.status === "concluido" ? "Conta criada" : "Cadastro em andamento"}</p></div>{item.status === "pendente" && <button type="button" onClick={() => confirmarPagamento(item._id)} className="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800">Confirmar pagamento</button>}</div>)}</div>}
+      </section>
 
       <div className="grid md:grid-cols-3 gap-6">
 
@@ -319,4 +352,4 @@ function Master() {
   )
 }
 
-export default Master 
+export default Master

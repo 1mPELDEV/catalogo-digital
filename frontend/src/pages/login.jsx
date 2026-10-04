@@ -51,7 +51,7 @@ function Login() {
             <div><label htmlFor="senha" className="mb-1.5 block text-sm font-medium text-slate-700">Senha</label><input id="senha" className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-green-600 focus:ring-4 focus:ring-green-600/10" type="password" autoComplete="current-password" placeholder="Sua senha" value={senha} onChange={e => setSenha(e.target.value)} required /></div>
             {erro && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{erro}</p>}
             <button type="submit" disabled={enviando} className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-700 px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60">{enviando ? "Entrando..." : "Entrar na minha loja"}{!enviando && <ArrowRight size={17} />}</button>
-            <p className="text-center text-sm text-slate-500">Ainda não tem uma loja? <Link to="/cadastro" className="font-semibold text-green-800 no-underline hover:underline">Criar loja grátis</Link></p>
+            <p className="text-center text-sm text-slate-500">Quer criar uma loja? <Link to="/interesse" className="font-semibold text-green-800 no-underline hover:underline">Ver plano anual</Link></p>
           </form>
         </div>
       </section>

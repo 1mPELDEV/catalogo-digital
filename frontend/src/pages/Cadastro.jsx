@@ -82,7 +82,7 @@ function Cadastro() {
         <div className="grid overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_80px_-42px_rgba(15,23,42,.25)] lg:grid-cols-[1.1fr_.9fr]">
           <section className="p-6 sm:p-10 lg:p-12">
             <div className="mb-8">
-              <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-800"><Check size={14} /> Comece grátis em poucos minutos</span>
+              <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-800"><Check size={14} /> Cadastro após confirmação do pagamento</span>
               <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Crie sua loja online</h1>
               <p className="mt-3 max-w-lg text-sm leading-6 text-slate-600 sm:text-base">Personalize seu catálogo e compartilhe seus produtos com os clientes pelo WhatsApp.</p>
             </div>
@@ -141,9 +141,9 @@ function Cadastro() {
               {erro && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{erro}</p>}
 
               <button type="submit" disabled={enviando} className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-700 px-5 py-3.5 font-semibold text-white shadow-lg shadow-green-800/15 transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60">
-                {enviando ? "Criando sua loja..." : "Criar minha loja grátis"} {!enviando && <ArrowRight size={18} />}
+                {enviando ? "Criando sua loja..." : "Criar minha loja"} {!enviando && <ArrowRight size={18} />}
               </button>
-              <p className="text-center text-xs leading-5 text-slate-500">Ao continuar, você cria uma conta para gerenciar seu catálogo digital.</p>
+              <p className="text-center text-xs leading-5 text-slate-500">Este e-mail precisa ter um pagamento confirmado. <Link to="/interesse" className="font-semibold text-green-800">Ver plano anual</Link></p>
             </form>
           </section>
 

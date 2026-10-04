@@ -4,7 +4,7 @@ import { useLoja } from "../hooks/useLoja"
 import { gerarPaleta } from "../utils/paleta"
 import { Store, MessageCircle } from "lucide-react"
 
-const rotasInternas = ["admin", "login", "cadastro", "pedido", "master", "welcome"]
+const rotasInternas = ["admin", "login", "cadastro", "interesse", "pedido", "master", "welcome"]
 
 function Footer() {
   const location = useLocation()
