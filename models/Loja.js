@@ -24,6 +24,9 @@ const LojaSchema = new mongoose.Schema({
     whatsapp: String
   },
 
+  planoInicio: Date,
+  planoExpiraEm: Date,
+
   features: {
 
     catalogo: {

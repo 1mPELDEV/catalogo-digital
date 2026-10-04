@@ -4,11 +4,37 @@ const bcrypt = require("bcrypt")
 
 const Loja = require("../models/Loja")
 const Admin = require("../models/Admin")
+const Interesse = require("../models/Interesse")
 
 const { verificaToken } = require("../middlewares/authMiddleware")
 const { somenteMaster } = require("../middlewares/masterMiddleware")
 
 router.use(verificaToken, somenteMaster)
+
+router.get("/interesses", async (req, res) => {
+  try {
+    const interesses = await Interesse.find().sort({ criadoEm: -1 }).lean()
+    res.json(interesses)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ erro: "Erro ao buscar interessados" })
+  }
+})
+
+router.patch("/interesses/:id/confirmar", async (req, res) => {
+  try {
+    const interesse = await Interesse.findOneAndUpdate(
+      { _id: req.params.id, status: "pendente" },
+      { $set: { status: "pago", pagoEm: new Date() } },
+      { new: true }
+    )
+    if (!interesse) return res.status(404).json({ erro: "Interesse não encontrado ou já processado" })
+    res.json(interesse)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ erro: "Erro ao confirmar pagamento" })
+  }
+})
 
 
 // listar lojas

@@ -5,21 +5,53 @@ const jwt = require("jsonwebtoken")
 
 const Admin = require("../models/Admin")
 const Loja = require("../models/Loja")
+const Interesse = require("../models/Interesse")
 
 const upload = require("../config/multer")
 
 console.log("auth.js: Auth router carregado ")
 
+router.post("/interesse", async (req, res) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase()
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({ erro: "Informe um e-mail válido" })
+    }
+    await Interesse.updateOne(
+      { email },
+      { $setOnInsert: { email, plano: "anual", valor: 200, status: "pendente" } },
+      { upsert: true }
+    )
+    res.status(201).json({ ok: true, mensagem: "Interesse registrado" })
+  } catch (err) {
+    console.error("Erro ao registrar interesse:", err)
+    res.status(500).json({ erro: "Não foi possível registrar seu interesse" })
+  }
+})
+
 router.post("/register", upload.fields([{ name: "logo", maxCount: 1 }, { name: "banner", maxCount: 1 }]),
  async (req, res) => {
+  let interesse
   try {
 
-    const { nomeLoja, email, senha, whatsapp, corPrimaria} = req.body
+    const { nomeLoja, senha, whatsapp, corPrimaria } = req.body
+    const email = String(req.body.email || "").trim().toLowerCase()
+
+    interesse = await Interesse.findOneAndUpdate(
+      { email: String(email || "").trim().toLowerCase(), status: "pago" },
+      { $set: { status: "cadastrando" } },
+      { new: true }
+    )
+    if (!interesse) {
+      return res.status(403).json({ erro: "Este e-mail ainda não tem um pagamento confirmado. Envie seu interesse e aguarde a confirmação." })
+    }
 
     // email já existe?
     const existe = await Admin.findOne({ email })
 
     if (existe) {
+      interesse.status = "pago"
+      await interesse.save()
       return res.status(400).json({
         erro: "Email já cadastrado"
       })
@@ -37,6 +69,8 @@ router.post("/register", upload.fields([{ name: "logo", maxCount: 1 }, { name: "
     const slugExiste = await Loja.findOne({ slug })
 
     if (slugExiste) {
+      interesse.status = "pago"
+      await interesse.save()
       return res.status(400).json({
         erro: "Nome da loja já está em uso"
       })
@@ -44,6 +78,9 @@ router.post("/register", upload.fields([{ name: "logo", maxCount: 1 }, { name: "
 
     // senha hash
     const hash = await bcrypt.hash(senha, 10)
+    const planoInicio = new Date()
+    const planoExpiraEm = new Date(planoInicio)
+    planoExpiraEm.setFullYear(planoExpiraEm.getFullYear() + 1)
 
     // 1️⃣ cria loja
     const loja = await Loja.create({
@@ -63,6 +100,9 @@ router.post("/register", upload.fields([{ name: "logo", maxCount: 1 }, { name: "
       contato: {
         whatsapp: whatsapp || ""
       },
+
+      planoInicio,
+      planoExpiraEm,
 
       features: {
         catalogo: true,
@@ -88,6 +128,10 @@ router.post("/register", upload.fields([{ name: "logo", maxCount: 1 }, { name: "
     loja.adminId = admin._id
     await loja.save()
 
+    interesse.status = "concluido"
+    interesse.concluidoEm = new Date()
+    await interesse.save()
+
     // 4️⃣ token
     const token = jwt.sign(
       {
@@ -104,6 +148,11 @@ router.post("/register", upload.fields([{ name: "logo", maxCount: 1 }, { name: "
     })
 
   } catch (err) {
+
+    if (interesse?.status === "cadastrando") {
+      interesse.status = "pago"
+      await interesse.save().catch(() => {})
+    }
 
     console.log("auth.js: ERRO REGISTER:", err)
 

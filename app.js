@@ -29,6 +29,11 @@ app.use(cors())
 //Middleweres
 app.use(express.json())
 
+// Endpoint simples usado pelo monitor externo para manter o serviço ativo.
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok" })
+})
+
 // Rota para servir arquivos estáticos da pasta "uploads"
 app.use(
  "/uploads",
