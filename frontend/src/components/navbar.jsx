@@ -2,28 +2,40 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { useLoja } from "../hooks/useLoja"
 import { gerarPaleta } from "../utils/paleta"
-import { ShoppingCart, Store, LogOut, LayoutGrid, Menu, X, Shield } from "lucide-react"
+import { ShoppingCart, Store, LogOut, LayoutGrid, Menu, X, Shield, MessageCircle } from "lucide-react"
+
+function contarItensCarrinho(slug) {
+  try {
+    const itens = JSON.parse(localStorage.getItem(`carrinho-${slug}`) || "[]")
+    return Array.isArray(itens) ? itens.length : 0
+  } catch {
+    return 0
+  }
+}
 
 function Navbar() {
-  const [logado, setLogado] = useState(false)
-  const [quantidade, setQuantidade] = useState(0)
-  const [menuAberto, setMenuAberto] = useState(false)
-  const menuRef = useRef(null)
-
   const location = useLocation()
   const navigate = useNavigate()
 
   const slugAtual = location.pathname.split("/")[1] || null
-  const rotasInternas = ["admin", "login", "cadastro", "pedido", "master"]
+  const rotasInternas = ["admin", "login", "cadastro", "pedido", "master", "welcome"]
+  const paginaPublicaLoja = Boolean(slugAtual && !rotasInternas.includes(slugAtual))
 
-  let slugDaLoja = null
+  let slugSolicitado = null
   if (slugAtual && !rotasInternas.includes(slugAtual)) {
-    slugDaLoja = slugAtual
+    slugSolicitado = slugAtual
   } else {
-    slugDaLoja = localStorage.getItem("slugLoja")
+    slugSolicitado = localStorage.getItem("slugLoja")
   }
 
-  const loja = useLoja(slugDaLoja)
+  const loja = useLoja(slugSolicitado)
+  const slugDaLoja = slugSolicitado || loja?.slug || null
+  const [logado, setLogado] = useState(() => Boolean(localStorage.getItem("token")))
+  const [, setVersaoCarrinho] = useState(0)
+  const [menuAberto, setMenuAberto] = useState(false)
+  const [rotaMenu, setRotaMenu] = useState(location.pathname)
+  const menuRef = useRef(null)
+  const quantidade = contarItensCarrinho(slugDaLoja)
 
   const paleta = useMemo(
     () => gerarPaleta(loja?.tema?.corPrimaria),
@@ -31,26 +43,13 @@ function Navbar() {
   )
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    setLogado(!!token)
-    const carrinho = JSON.parse(localStorage.getItem(`carrinho-${slugDaLoja}`)) || []
-    setQuantidade(carrinho.length)
-  }, [])
-
-  useEffect(() => {
     const atualizar = () => {
       setLogado(!!localStorage.getItem("token"))
-      const carrinho = JSON.parse(localStorage.getItem(`carrinho-${slugDaLoja}`)) || []
-      setQuantidade(carrinho.length)
+      setVersaoCarrinho(versao => versao + 1)
     }
     window.addEventListener("storage", atualizar)
     return () => window.removeEventListener("storage", atualizar)
   }, [slugDaLoja])
-
-  // Fecha o menu ao trocar de rota
-  useEffect(() => {
-    setMenuAberto(false)
-  }, [location.pathname])
 
   // Fecha o menu ao clicar fora
   useEffect(() => {
@@ -74,6 +73,38 @@ function Navbar() {
     setLogado(false)
     setMenuAberto(false)
     navigate("/login")
+  }
+
+  const alternarMenu = () => {
+    if (menuAberto && rotaMenu === location.pathname) {
+      setMenuAberto(false)
+      return
+    }
+    setRotaMenu(location.pathname)
+    setMenuAberto(true)
+  }
+
+  const aguardandoLoja = !loja && (
+    paginaPublicaLoja ||
+    (Boolean(localStorage.getItem("token")) && ["admin", "welcome"].includes(slugAtual))
+  )
+
+  if (aguardandoLoja) {
+    return (
+      <nav aria-label="Carregando navegação da loja" aria-busy="true" className="sticky top-0 z-[100] border-b border-slate-200/70 bg-white/75 shadow-sm backdrop-blur-xl">
+        <div className="mx-auto flex h-[60px] max-w-[1100px] items-center justify-between gap-4 px-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="store-chrome-shimmer h-9 w-9 shrink-0 rounded-xl" />
+            <span className="store-chrome-shimmer h-4 w-32 max-w-[35vw] rounded-md" />
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="store-chrome-shimmer h-8 w-16 rounded-lg sm:w-20" />
+            <span className="store-chrome-shimmer h-8 w-16 rounded-lg sm:w-20" />
+            <span className="store-chrome-shimmer h-8 w-8 rounded-lg" />
+          </div>
+        </div>
+      </nav>
+    )
   }
 
   return (
@@ -139,6 +170,18 @@ function Navbar() {
           </Link>
 
           <div className="nav-actions">
+            {paginaPublicaLoja && loja?.contato?.whatsapp && (
+              <a
+                href={`https://wa.me/${loja.contato.whatsapp.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="nav-link"
+                style={{ color: paleta.textoSuave }}
+              >
+                <MessageCircle size={15} /> <span className="nav-label">WhatsApp</span>
+              </a>
+            )}
+
             {slugDaLoja && (
               <>
                 <Link to={`/${slugDaLoja}`} className="nav-link" style={{ color: paleta.textoSuave }}>
@@ -168,7 +211,7 @@ function Navbar() {
                 <div className="nav-menu-wrap" ref={menuRef}>
                   <button
                     className="nav-menu-btn"
-                    onClick={() => setMenuAberto((v) => !v)}
+                    onClick={alternarMenu}
                     aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
                     aria-expanded={menuAberto}
                     style={{ color: paleta.texto }}
@@ -176,7 +219,7 @@ function Navbar() {
                     {menuAberto ? <X size={20} /> : <Menu size={20} />}
                   </button>
 
-                  {menuAberto && (
+                  {menuAberto && rotaMenu === location.pathname && (
                     <div
                       className="nav-dropdown"
                       style={{

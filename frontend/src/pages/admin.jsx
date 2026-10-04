@@ -1,10 +1,12 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from "axios"
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import ModalConfirmacao from '../components/modalConfirmacao'
-import { Package, Plus, Pencil, Trash2, Tag, ChevronRight, X, Image } from 'lucide-react'
+import { ArrowUpRight, BadgePercent, Boxes, Check, ExternalLink, Home, LayoutGrid, MessageCircle, Package, Plus, Pencil, Share2, Settings, Store, Trash2, Tag, ChevronRight, X, Image } from 'lucide-react'
+import { useLoja } from '../hooks/useLoja'
+import EditarLoja from '../components/admin/EditarLoja'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -28,14 +30,18 @@ function Admin() {
   const [mostrarFormCategoria, setMostrarFormCategoria] = useState(false)
   const [nomeCategoria, setNomeCategoria] = useState("")
   const [criandoCategoria, setCriandoCategoria] = useState(false)
+  const [abaAtiva, setAbaAtiva] = useState("inicio")
 
   const fileInputRef = useRef(null)
   const navigate = useNavigate()
   const token = localStorage.getItem("token")
+  const loja = useLoja()
+  const linkLoja = loja?.slug ? `${window.location.origin}/${loja.slug}` : ""
+  const produtosEmPromocao = produtos.filter(produto => produto.promocao?.ativa).length
 
-  useEffect(() => { if (!token) navigate("/") }, [])
+  useEffect(() => { if (!token) navigate("/") }, [navigate, token])
 
-  const buscarProdutos = async () => {
+  const buscarProdutos = useCallback(async () => {
     try {
       setLoading(true)
       const res = await axios.get(`${API_URL}/produtos`, { headers: { Authorization: `Bearer ${token}` } })
@@ -43,14 +49,14 @@ function Admin() {
       return res.data
     } catch { toast.error("Erro ao buscar produtos") }
     finally { setLoading(false) }
-  }
+  }, [token])
 
-  const buscarCategorias = async () => {
+  const buscarCategorias = useCallback(async () => {
     try {
       const res = await axios.get(`${API_URL}/categorias`, { headers: { Authorization: `Bearer ${token}` } })
       setCategorias(res.data)
     } catch { toast.error("Erro ao buscar categorias") }
-  }
+  }, [token])
 
   const criarCategoria = async () => {
     if (!nomeCategoria.trim()) return toast.warning("Digite o nome da categoria!")
@@ -83,7 +89,7 @@ function Admin() {
       await buscarCategorias()
     }
     carregar()
-  }, [])
+  }, [buscarProdutos, buscarCategorias])
 
   const limparForm = () => {
     setNome(''); setPreco(''); setDescricao('')
@@ -156,6 +162,16 @@ function Admin() {
     setImagemPreview(URL.createObjectURL(file))
   }
 
+  const compartilharLoja = async () => {
+    if (!linkLoja) return
+    try {
+      await navigator.clipboard.writeText(linkLoja)
+      toast.success("Link da loja copiado!")
+    } catch {
+      toast.error("Não foi possível copiar o link")
+    }
+  }
+
   return (
     <>
       <ToastContainer />
@@ -185,20 +201,76 @@ function Admin() {
         .dropzone { border: 1.5px dashed #d4d4d4; border-radius: 12px; padding: 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: border-color 0.15s, background 0.15s; background: #fafafa; }
         .dropzone:hover { border-color: #aaa; background: #f4f4f4; }
         .dropzone.tem-imagem { padding: 0; border-style: solid; border-color: #e2e2e2; overflow: hidden; }
+        .admin-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 22px; align-items: start; }
+        .admin-sidebar { position: sticky; top: 82px; }
+        .admin-nav-link { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; border-radius: 10px; background: transparent; padding: 10px 12px; color: #475569; text-decoration: none; text-align: left; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .admin-nav-link:hover, .admin-nav-link.active { background: #edf8f0; color: #166534; }
+        @media (max-width: 850px) { .admin-layout { grid-template-columns: minmax(0, 1fr); } .admin-sidebar { position: static; } .admin-sidebar nav { display: flex; overflow-x: auto; gap: 4px; } .admin-sidebar .admin-nav-link { width: auto; white-space: nowrap; } .admin-sidebar-note { display: none; } }
       `}</style>
 
-      <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: "#f8f8f8", minHeight: "100vh" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
-
-          {/* HEADER */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
-            <div>
-              <h1 style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: "#0f0f0f", marginBottom: 4 }}>Seus Produtos:</h1>
-              <p style={{ fontSize: 14, color: "#888" }}>{produtos.length} produto{produtos.length !== 1 ? "s" : ""} cadastrado{produtos.length !== 1 ? "s" : ""}</p>
+      <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: "#f7faf8", minHeight: "100vh" }}>
+        <div className="admin-layout" style={{ maxWidth: 1380, margin: "0 auto", padding: "28px 24px" }}>
+          <aside className="admin-sidebar">
+            <div style={{ marginBottom: 10, padding: "8px 12px", fontSize: 11, fontWeight: 700, color: "#94a3b8", letterSpacing: ".12em" }}>MENU DA LOJA</div>
+            <nav aria-label="Navegação do painel">
+              <button type="button" className={`admin-nav-link ${abaAtiva === "inicio" ? "active" : ""}`} onClick={() => setAbaAtiva("inicio")}><Home size={16} /> Visão geral</button>
+              <button type="button" className="admin-nav-link" onClick={() => { setAbaAtiva("inicio"); setTimeout(() => document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth" }), 0) }}><Package size={16} /> Produtos</button>
+              <button type="button" className="admin-nav-link" onClick={() => { setAbaAtiva("inicio"); limparForm(); setMostrarForm(true); setMostrarFormCategoria(true); setTimeout(() => document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth" }), 0) }}><LayoutGrid size={16} /> Categorias</button>
+              {linkLoja && <a className="admin-nav-link" href={linkLoja} target="_blank" rel="noreferrer"><Store size={16} /> Minha loja <ExternalLink size={13} style={{ marginLeft: "auto" }} /></a>}
+              <button type="button" className={`admin-nav-link ${abaAtiva === "loja" ? "active" : ""}`} onClick={() => setAbaAtiva("loja")}><Settings size={16} /> Editar minha loja</button>
+            </nav>
+            <div className="admin-sidebar-note" style={{ marginTop: 20, border: "1px solid #e5ece7", borderRadius: 16, padding: 15, background: "#fff" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#166534", fontSize: 12, fontWeight: 600 }}><MessageCircle size={15} /> Atendimento pelo WhatsApp</div>
+              <p style={{ margin: "8px 0 0", fontSize: 11, lineHeight: 1.6, color: "#64748b" }}>Os pedidos são enviados direto para o WhatsApp configurado na sua loja.</p>
             </div>
-            <button className="btn-dark" onClick={() => { limparForm(); setMostrarForm(!mostrarForm) }}>
-              <Plus size={16} /> Novo produto
-            </button>
+          </aside>
+
+          <main>
+
+          {abaAtiva === "loja" ? <EditarLoja key={loja?._id || "loja"} loja={loja} token={token} linkLoja={linkLoja} /> : <>
+          {/* HEADER */}
+          <div id="visao-geral" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#15803d", marginBottom: 8 }}>PAINEL DA LOJA</p>
+              <h1 style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.035em", color: "#10261b", marginBottom: 5 }}>Olá{loja?.nome ? `, ${loja.nome}` : ""}!</h1>
+              <p style={{ fontSize: 14, color: "#64748b" }}>Acompanhe seu catálogo e mantenha sua loja atualizada.</p>
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {linkLoja && <a href={linkLoja} target="_blank" rel="noreferrer" className="btn-outline" style={{ textDecoration: "none" }}><ExternalLink size={15} /> Ver minha loja</a>}
+              <button className="btn-dark" onClick={() => { limparForm(); setMostrarForm(!mostrarForm) }}><Plus size={16} /> Adicionar produto</button>
+            </div>
+          </div>
+
+          {/* INDICADORES DO CATÁLOGO */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 14, marginBottom: 20 }}>
+            {[
+              { titulo: "Produtos cadastrados", valor: produtos.length, Icone: Package, nota: produtos.length ? "No seu catálogo" : "Adicione o primeiro produto" },
+              { titulo: "Categorias", valor: categorias.length, Icone: Boxes, nota: "Organização da vitrine" },
+              { titulo: "Em promoção", valor: produtosEmPromocao, Icone: BadgePercent, nota: "Ofertas ativas" },
+            ].map(stat => (
+              <div key={stat.titulo} style={{ background: "#fff", border: "1px solid #e5ece7", borderRadius: 16, padding: 18, boxShadow: "0 5px 18px rgba(16,38,27,0.03)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: "#64748b" }}>{stat.titulo}</span>
+                  <span style={{ display: "grid", placeItems: "center", width: 34, height: 34, borderRadius: 11, background: "#edf8f0", color: "#15803d" }}><stat.Icone size={17} /></span>
+                </div>
+                <p style={{ margin: "13px 0 3px", fontSize: 28, lineHeight: 1, fontWeight: 700, letterSpacing: "-0.04em", color: "#10261b" }}>{stat.valor}</p>
+                <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>{stat.nota}</p>
+              </div>
+            ))}
+            <div style={{ background: "#edf8f0", border: "1px solid #d4ead9", borderRadius: 16, padding: 18, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 126 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 9, color: "#166534" }}><Store size={17} /><span style={{ fontSize: 13, fontWeight: 600 }}>Compartilhe sua loja</span></div>
+              <button type="button" onClick={compartilharLoja} disabled={!linkLoja} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: 0, background: "transparent", padding: "10px 0 0", textAlign: "left", color: "#14532d", fontSize: 13, fontWeight: 600, cursor: linkLoja ? "pointer" : "not-allowed", opacity: linkLoja ? 1 : 0.5 }}><span>{linkLoja ? "Copiar link público" : "Carregando link..."}</span>{linkLoja ? <Share2 size={15} /> : <ArrowUpRight size={15} />}</button>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, border: "1px solid #dbeafe", background: "#eff6ff", color: "#1e3a8a", borderRadius: 14, padding: "12px 15px", marginBottom: 26, fontSize: 13, lineHeight: 1.5 }}>
+            <Check size={16} style={{ marginTop: 1, flexShrink: 0 }} />
+            Os pedidos são enviados diretamente para o WhatsApp da loja.
+          </div>
+
+          <div id="produtos" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, gap: 12, flexWrap: "wrap" }}>
+            <div><h2 style={{ margin: 0, fontSize: 20, fontWeight: 650, color: "#10261b" }}>Seus produtos</h2><p style={{ margin: "5px 0 0", fontSize: 13, color: "#64748b" }}>{produtos.length} produto{produtos.length !== 1 ? "s" : ""} no catálogo</p></div>
+            {categorias.length > 0 && <span style={{ borderRadius: 999, background: "#fff", border: "1px solid #e5ece7", padding: "6px 11px", color: "#64748b", fontSize: 12 }}>{categorias.length} categoria{categorias.length !== 1 ? "s" : ""}</span>}
           </div>
 
           {/* FORMULÁRIO */}
@@ -377,6 +449,8 @@ function Admin() {
               </div>
             ))}
           </div>
+          </>}
+          </main>
         </div>
       </div>
 

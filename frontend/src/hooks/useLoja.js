@@ -41,6 +41,8 @@ export function useLoja(slug = null) {
     }
 
     buscarLoja()
+    window.addEventListener("store:updated", buscarLoja)
+    return () => window.removeEventListener("store:updated", buscarLoja)
 
   }, [slug])
 

@@ -57,7 +57,7 @@ router.post("/register", upload.fields([{ name: "logo", maxCount: 1 }, { name: "
     banner: req.files?.banner?.[0]?.path || null,
 
       tema: {
-        corPrimaria: corPrimaria || "#22c55e"
+        corPrimaria: corPrimaria || "#0b7030"
       },
 
       contato: {
@@ -113,5 +113,4 @@ router.post("/register", upload.fields([{ name: "logo", maxCount: 1 }, { name: "
   }
 })
 
-console.log("Exportando router:", router)
 module.exports = router

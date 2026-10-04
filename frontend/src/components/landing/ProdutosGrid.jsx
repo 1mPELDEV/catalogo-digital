@@ -1,17 +1,15 @@
 import axios from "axios"
 import { Link } from "react-router-dom"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import formatarPreco from "../../utils/formatarpreco"
 import { gerarPaleta } from "../../utils/paleta"
-import { ShoppingCart, MessageCircle, Search, Tag, Star } from "lucide-react"
+import { ShoppingCart, MessageCircle, Search, Tag, Star, X } from "lucide-react"
+import imgFallback from "../../assets/produto-sem-imagem.png"
 
 const API_URL = import.meta.env.VITE_API_URL
 
-const IMAGEM_FALLBACK = "https://picsum.photos/200"
-
-// Preço com desconto aplicado (quando houver promoção ativa)
 const calcularPrecoFinal = (produto) =>
   produto.promocao?.ativa
     ? produto.preco - produto.promocao.desconto
@@ -26,36 +24,44 @@ function ProdutosGrid({ slug, loja }) {
   const [lista, setLista] = useState([])
   const [busca, setBusca] = useState("")
   const [categoriaSelecionada, setCategoriaSelecionada] = useState("")
+  const [produtoDetalhe, setProdutoDetalhe] = useState(null)
+  const [carregando, setCarregando] = useState(true)
+  const [erro, setErro] = useState("")
 
   const paleta = useMemo(
     () => gerarPaleta(loja?.tema?.corPrimaria),
     [loja?.tema?.corPrimaria]
   )
 
-  const list = async () => {
+  const list = useCallback(async () => {
     try {
+      setCarregando(true)
+      setErro("")
       const res = await axios.get(`${API_URL}/produtos/${slug}`)
       setProdutos(res.data)
     } catch (err) {
-      console.log("erro " + err)
+      console.error("Erro ao carregar produtos:", err)
+      setErro("Não foi possível carregar os produtos. Verifique sua conexão e tente novamente.")
+    } finally {
+      setCarregando(false)
     }
-  }
+  }, [slug])
 
-  const buscarCategorias = async () => {
+  const buscarCategorias = useCallback(async () => {
     try {
       const res = await axios.get(`${API_URL}/categorias/${slug}`)
       setCategorias(res.data)
     } catch (err) {
       console.log("erro categorias:", err)
     }
-  }
+  }, [slug])
 
   useEffect(() => {
     list()
     buscarCategorias()
     const pedidoSalvo = JSON.parse(localStorage.getItem(chaveLocalStorage)) || []
     setLista(pedidoSalvo)
-  }, [slug])
+  }, [slug, list, buscarCategorias, chaveLocalStorage])
 
   const addItem = (produto) => {
     const produtoComPreco = { ...produto, precoFinal: calcularPrecoFinal(produto) }
@@ -82,7 +88,7 @@ function ProdutosGrid({ slug, loja }) {
   }
 
   const abrirWhatsApp = (produto) => {
-    // Remove +, espaços, parênteses e hífens para gerar um link válido
+
     const numero = loja?.contato?.whatsapp?.replace(/\D/g, "")
     if (!numero) {
       toast.error("Esta loja ainda não configurou o WhatsApp!")
@@ -100,7 +106,6 @@ function ProdutosGrid({ slug, loja }) {
     return (b.promocao?.ativa ? 1 : 0) - (a.promocao?.ativa ? 1 : 0)
   })
 
-  // Itens antigos no localStorage podem não ter precoFinal
   const total = lista.reduce((acc, item) => acc + (item.precoFinal ?? item.preco), 0)
 
   const barraVisivel = loja?.features?.carrinho && lista.length > 0
@@ -146,7 +151,7 @@ function ProdutosGrid({ slug, loja }) {
           </div>
 
           {categorias.length > 0 && (
-            <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 8, marginTop: 14, overflowX: "auto", flexWrap: "nowrap", paddingBottom: 4, WebkitOverflowScrolling: "touch" }}>
               <button
                 className={`cat-btn ${categoriaSelecionada === "" ? "ativo" : ""}`}
                 style={categoriaSelecionada === "" ? { backgroundColor: paleta.primaria } : {}}
@@ -170,7 +175,21 @@ function ProdutosGrid({ slug, loja }) {
 
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px" }}>
 
-          {produtosOrdenados.length === 0 && (
+        {carregando && (
+          <div role="status" style={{ textAlign: "center", padding: "56px 0", color: "#64748b" }}>
+            <span className="mx-auto mb-3 block h-6 w-6 animate-spin rounded-full border-2 border-green-700 border-t-transparent" />
+            <p style={{ fontSize: 14 }}>Carregando produtos...</p>
+          </div>
+        )}
+
+        {!carregando && erro && (
+          <div role="alert" className="mx-auto max-w-md rounded-2xl border border-red-100 bg-white p-6 text-center shadow-sm">
+            <p className="text-sm text-red-700">{erro}</p>
+            <button type="button" onClick={list} className="mt-4 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-800">Tentar novamente</button>
+          </div>
+        )}
+
+        {!carregando && !erro && produtosOrdenados.length === 0 && (
             <div style={{ textAlign: "center", padding: "64px 0", color: "#aaa" }}>
               <Search size={36} style={{ marginBottom: 12, opacity: 0.3 }} />
               <p style={{ fontSize: 15 }}>Nenhum produto encontrado.</p>
@@ -178,7 +197,7 @@ function ProdutosGrid({ slug, loja }) {
           )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
-            {produtosOrdenados.map(produto => {
+            {!carregando && !erro && produtosOrdenados.map(produto => {
               const quantidade = loja?.features?.carrinho
                 ? lista.filter(item => item._id === produto._id).length
                 : 0
@@ -190,13 +209,17 @@ function ProdutosGrid({ slug, loja }) {
 
                   <div style={{ position: "relative" }}>
                     <img
-                      src={produto.imagem || IMAGEM_FALLBACK}
+                      src={produto.imagem || imgFallback}
                       alt={produto.nome}
-                      style={{ width: "100%", height: 180, objectFit: "cover" }}
+                      onClick={() => setProdutoDetalhe(produto)}
+                      onKeyDown={e => e.key === "Enter" && setProdutoDetalhe(produto)}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Ver detalhes de ${produto.nome}`}
+                      style={{ width: "100%", height: 180, objectFit: "cover", cursor: "pointer" }}
                       onError={e => {
-                        // Evita loop infinito se o fallback também falhar
                         e.target.onerror = null
-                        e.target.src = IMAGEM_FALLBACK
+                        e.target.src = imgFallback
                       }}
                     />
                     {produto.promocao?.ativa && (
@@ -214,9 +237,11 @@ function ProdutosGrid({ slug, loja }) {
                       </div>
                     )}
 
+                    <button type="button" onClick={() => setProdutoDetalhe(produto)} style={{ display: "block", border: 0, padding: 0, background: "transparent", textAlign: "left", cursor: "pointer", fontFamily: "inherit" }}>
                     <h3 style={{ fontSize: 15, fontWeight: 600, color: "#0f0f0f", marginBottom: 4, lineHeight: 1.3 }}>
                       {produto.nome}
                     </h3>
+                    </button>
 
                     {produto.descricao && (
                       <p style={{ fontSize: 12, color: "#999", marginBottom: 8, lineHeight: 1.4 }}>
@@ -327,6 +352,25 @@ function ProdutosGrid({ slug, loja }) {
               Ver pedido
             </Link>
 
+          </div>
+        )}
+
+        {produtoDetalhe && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/55 p-4" onClick={() => setProdutoDetalhe(null)}>
+            <section role="dialog" aria-modal="true" aria-labelledby="produto-detalhe-titulo" className="max-h-[90vh] w-full max-w-lg overflow-auto rounded-3xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="relative">
+                <img src={produtoDetalhe.imagem || imgFallback} alt={produtoDetalhe.nome} className="h-56 w-full object-cover sm:h-64" onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = imgFallback }} />
+                <button type="button" onClick={() => setProdutoDetalhe(null)} aria-label="Fechar detalhes" className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow transition hover:bg-white"><X size={18} /></button>
+                {produtoDetalhe.promocao?.ativa && <span className="absolute bottom-3 left-3 rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white">Em promoção</span>}
+              </div>
+              <div className="p-5 sm:p-6">
+                {produtoDetalhe.categoria && <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-green-800"><Tag size={13} />{produtoDetalhe.categoria}</p>}
+                <h2 id="produto-detalhe-titulo" className="text-xl font-bold text-slate-950">{produtoDetalhe.nome}</h2>
+                {produtoDetalhe.descricao && <p className="mt-2 text-sm leading-6 text-slate-600">{produtoDetalhe.descricao}</p>}
+                <div className="mt-5 flex items-end gap-2">{produtoDetalhe.promocao?.ativa && <span className="text-sm text-slate-400 line-through">{formatarPreco(produtoDetalhe.preco)}</span>}<span className="text-2xl font-bold" style={{ color: paleta.primaria }}>{formatarPreco(calcularPrecoFinal(produtoDetalhe))}</span></div>
+                {loja?.features?.carrinho ? <button type="button" onClick={() => { addItem(produtoDetalhe); setProdutoDetalhe(null) }} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90" style={{ backgroundColor: paleta.primaria }}><ShoppingCart size={16} />Adicionar ao pedido</button> : <button type="button" onClick={() => { abrirWhatsApp(produtoDetalhe); setProdutoDetalhe(null) }} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-green-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-800"><MessageCircle size={16} />Perguntar no WhatsApp</button>}
+              </div>
+            </section>
           </div>
         )}
       </div>

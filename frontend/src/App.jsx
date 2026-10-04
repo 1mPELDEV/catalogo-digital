@@ -12,6 +12,7 @@ import Pedido from "./pages/Pedido"
 import Landing from "./pages/Landing"
 import Master from "./pages/Master"
 import Home from "./pages/Home"
+import Welcome from "./pages/Welcome"
 import Footer from "./components/Footer"
 import Navbar from "./components/navbar"
 
@@ -30,6 +31,7 @@ function Layout() {
     !ocultarNavbar.includes(
       location.pathname
     )
+  const mostrarFooter = location.pathname !== "/"
 
   return (
     <>
@@ -62,6 +64,11 @@ function Layout() {
         />
 
         <Route
+        path="/welcome"
+        element={<Welcome/>}
+        />
+
+        <Route
           path="/admin"
           element={
             <RotaProtegida 
@@ -86,7 +93,7 @@ function Layout() {
 
       </Routes>
 
-      <Footer />
+      {mostrarFooter && <Footer />}
     </>
   )
 }

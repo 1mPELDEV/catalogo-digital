@@ -4,25 +4,53 @@ import { useLoja } from "../hooks/useLoja"
 import { gerarPaleta } from "../utils/paleta"
 import { Store, MessageCircle } from "lucide-react"
 
-const rotasInternas = ["admin", "login", "cadastro", "pedido", "master"]
+const rotasInternas = ["admin", "login", "cadastro", "pedido", "master", "welcome"]
 
 function Footer() {
   const location = useLocation()
   const slugAtual = location.pathname.split("/")[1] || null
 
-  let slugDaLoja = null
+  let slugSolicitado = null
   if (slugAtual && !rotasInternas.includes(slugAtual)) {
-    slugDaLoja = slugAtual
+    slugSolicitado = slugAtual
   } else {
-    slugDaLoja = localStorage.getItem("slugLoja")
+    slugSolicitado = localStorage.getItem("slugLoja")
   }
 
-  const loja = useLoja(slugDaLoja)
+  const loja = useLoja(slugSolicitado)
+  const slugDaLoja = slugSolicitado || loja?.slug || null
 
   const paleta = useMemo(
     () => gerarPaleta(loja?.tema?.corPrimaria),
     [loja?.tema?.corPrimaria]
   )
+
+  const aguardandoLoja = !loja && (
+    Boolean(slugSolicitado) ||
+    (Boolean(localStorage.getItem("token")) && ["admin", "welcome"].includes(slugAtual))
+  )
+
+  if (aguardandoLoja) {
+    return (
+      <footer aria-label="Carregando informações da loja" aria-busy="true" className="border-t border-slate-200/70 bg-white/75 px-4 py-8 shadow-[0_-8px_28px_rgba(15,23,42,.04)] backdrop-blur-xl sm:px-6">
+        <div className="mx-auto max-w-[1100px]">
+          <div className="flex flex-wrap items-center justify-between gap-5">
+            <div className="flex items-center gap-3">
+              <span className="store-chrome-shimmer h-8 w-8 rounded-xl" />
+              <span className="store-chrome-shimmer h-4 w-36 rounded-md" />
+            </div>
+            <div className="flex gap-3">
+              <span className="store-chrome-shimmer h-4 w-20 rounded-md" />
+              <span className="store-chrome-shimmer h-4 w-16 rounded-md" />
+            </div>
+          </div>
+          <div className="mt-6 border-t border-slate-200/70 pt-5">
+            <span className="store-chrome-shimmer mx-auto block h-3 w-48 max-w-full rounded-md" />
+          </div>
+        </div>
+      </footer>
+    )
+  }
 
   return (
     <footer style={{

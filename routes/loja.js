@@ -3,6 +3,7 @@ const router = express.Router()
 const Loja = require('../models/Loja')
 const Admin = require('../models/Admin')
 const { verificaToken } = require('../middlewares/authMiddleware')
+const upload = require('../config/multer')
 
 // GET privado — admin logado vendo sua própria loja
 router.get("/", verificaToken, async (req, res) => {
@@ -51,7 +52,7 @@ router.get("/:slug", async (req, res) => {
 })
 
 // PUT privado — admin atualizando sua loja
-router.put("/", verificaToken, async (req, res) => {
+router.put("/", verificaToken, upload.fields([{ name: "logo", maxCount: 1 }, { name: "banner", maxCount: 1 }]), async (req, res) => {
   try {
 
     const dadosPermitidos = {}
@@ -60,20 +61,26 @@ router.put("/", verificaToken, async (req, res) => {
       dadosPermitidos.nome = req.body.nome
     }
 
-    if (req.body.logo !== undefined) {
+    if (req.files?.logo?.[0]?.path) {
+      dadosPermitidos.logo = req.files.logo[0].path
+    } else if (req.body.logo !== undefined) {
       dadosPermitidos.logo = req.body.logo
     }
 
-    if (req.body.banner !== undefined) {
+    if (req.files?.banner?.[0]?.path) {
+      dadosPermitidos.banner = req.files.banner[0].path
+    } else if (req.body.banner !== undefined) {
       dadosPermitidos.banner = req.body.banner
     }
 
-    if (req.body.tema?.corPrimaria !== undefined) {
-      dadosPermitidos["tema.corPrimaria"] = req.body.tema.corPrimaria
+    const corPrimaria = req.body.tema?.corPrimaria ?? req.body.corPrimaria
+    if (corPrimaria !== undefined) {
+      dadosPermitidos["tema.corPrimaria"] = corPrimaria
     }
 
-    if (req.body.contato?.whatsapp !== undefined) {
-      dadosPermitidos["contato.whatsapp"] = req.body.contato.whatsapp
+    const whatsapp = req.body.contato?.whatsapp ?? req.body.whatsapp
+    if (whatsapp !== undefined) {
+      dadosPermitidos["contato.whatsapp"] = whatsapp
     }
 
     let lojaAtual = await Loja.findOne({ adminId: req.admin.id }).select("_id")
