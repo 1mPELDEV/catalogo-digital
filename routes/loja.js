@@ -1,12 +1,31 @@
 const express = require('express')
 const router = express.Router()
 const Loja = require('../models/Loja')
+const Admin = require('../models/Admin')
 const { verificaToken } = require('../middlewares/authMiddleware')
 
 // GET privado — admin logado vendo sua própria loja
 router.get("/", verificaToken, async (req, res) => {
   try {
-    const loja = await Loja.findOne({ adminId: req.adminId })
+    const adminId = req.admin?.id
+    if (!adminId) {
+      return res.status(401).json({ erro: "Token sem identificador de administrador" })
+    }
+
+    let loja = await Loja.findOne({ adminId })
+
+    // Compatibilidade com lojas antigas que têm o vínculo apenas em Admin.lojaId.
+    if (!loja) {
+      const admin = await Admin.findById(adminId).select("lojaId")
+      if (admin?.lojaId) {
+        loja = await Loja.findById(admin.lojaId)
+      }
+    }
+
+    if (!loja) {
+      return res.status(404).json({ erro: "Loja não encontrada para este administrador" })
+    }
+
     res.json(loja)
   } catch (err) {
     res.status(500).json({ erro: "Erro ao buscar loja" })
@@ -57,8 +76,20 @@ router.put("/", verificaToken, async (req, res) => {
       dadosPermitidos["contato.whatsapp"] = req.body.contato.whatsapp
     }
 
+    let lojaAtual = await Loja.findOne({ adminId: req.admin.id }).select("_id")
+    if (!lojaAtual) {
+      const admin = await Admin.findById(req.admin.id).select("lojaId")
+      if (admin?.lojaId) {
+        lojaAtual = { _id: admin.lojaId }
+      }
+    }
+
+    if (!lojaAtual) {
+      return res.status(404).json({ erro: "Loja não encontrada" })
+    }
+
     const loja = await Loja.findOneAndUpdate(
-      { adminId: req.adminId },
+      { _id: lojaAtual._id },
       { $set: dadosPermitidos },
       {
         new: true,
