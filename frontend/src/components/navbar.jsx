@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { useLoja } from "../hooks/useLoja"
 import { gerarPaleta } from "../utils/paleta"
-import { ShoppingCart, Store, LogOut, LayoutGrid, Menu, X, Shield, MessageCircle } from "lucide-react"
+import { ShoppingCart, Store, LogOut, LayoutGrid, Menu, X, Shield } from "lucide-react"
 
 function contarItensCarrinho(slug) {
   try {
@@ -92,7 +92,9 @@ function Navbar() {
 
   if (aguardandoLoja) {
     return (
-      <nav aria-label="Carregando navegação da loja" aria-busy="true" className="sticky top-0 z-[100] border-b border-slate-200/70 bg-white/75 shadow-sm backdrop-blur-xl">
+      <>
+      <style>{`.nav-shell { transition: background-color 520ms ease, border-color 520ms ease; } .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 16px; } @media (prefers-reduced-motion: reduce) { .nav-shell { transition-duration: .01ms; } } @media (max-width: 640px) { .nav-inner { padding: 0 16px; gap: 8px; } }`}</style>
+      <nav aria-label="Carregando navegação da loja" aria-busy="true" className="nav-shell sticky top-0 z-[100] border-b border-slate-200/70 bg-white/75 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex h-[60px] max-w-[1100px] items-center justify-between gap-4 px-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <span className="store-chrome-shimmer h-9 w-9 shrink-0 rounded-xl" />
@@ -105,6 +107,7 @@ function Navbar() {
           </div>
         </div>
       </nav>
+      </>
     )
   }
 
@@ -115,6 +118,8 @@ function Navbar() {
         .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
         .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; }
         .nav-brand-nome { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+        .nav-inner, .nav-inner a, .nav-inner button, .nav-brand-nome { transition: color 420ms ease, background-color 420ms ease, border-color 420ms ease; }
+        .nav-shell { transition: background-color 520ms ease, border-color 520ms ease; }
         .nav-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
         .nav-link { font-size: 14px; font-weight: 500; text-decoration: none; padding: 6px 10px; border-radius: 8px; transition: background 0.15s; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
         .nav-link:hover { background: rgba(128,128,128,0.15); }
@@ -131,6 +136,11 @@ function Navbar() {
         .nav-dropdown .nav-link { padding: 10px 12px; width: 100%; box-sizing: border-box; }
         .nav-dropdown .nav-btn-sair { width: 100%; box-sizing: border-box; padding: 10px 12px; justify-content: flex-start; font-size: 14px; }
 
+        @media (prefers-reduced-motion: reduce) {
+          .nav-shell { transition-duration: 0.01ms; }
+          .nav-inner, .nav-inner a, .nav-inner button, .nav-brand-nome { transition-duration: 0.01ms; }
+        }
+
         @media (max-width: 640px) {
           .nav-inner { padding: 0 16px; gap: 8px; }
           .nav-brand-nome { max-width: 140px; }
@@ -145,7 +155,7 @@ function Navbar() {
         }
       `}</style>
 
-      <nav style={{
+      <nav className="nav-shell" style={{
         background: paleta.primaria,
         borderBottom: `1px solid ${paleta.borda}`,
         position: "sticky",
@@ -171,18 +181,6 @@ function Navbar() {
           </Link>
 
           <div className="nav-actions">
-            {paginaPublicaLoja && loja?.contato?.whatsapp && (
-              <a
-                href={`https://wa.me/${loja.contato.whatsapp.replace(/\D/g, "")}`}
-                target="_blank"
-                rel="noreferrer"
-                className="nav-link"
-                style={{ color: paleta.textoSuave }}
-              >
-                <MessageCircle size={15} /> <span className="nav-label">WhatsApp</span>
-              </a>
-            )}
-
             {slugDaLoja && (
               <>
                 <Link to={`/${slugDaLoja}`} className="nav-link" style={{ color: paleta.textoSuave }}>

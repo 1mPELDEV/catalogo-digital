@@ -57,7 +57,10 @@ router.put("/", verificaToken, upload.fields([{ name: "logo", maxCount: 1 }, { n
     const dadosPermitidos = {}
 
     if (req.body.nome !== undefined) {
-      dadosPermitidos.nome = req.body.nome
+      if (typeof req.body.nome !== "string" || req.body.nome.trim().length < 2 || req.body.nome.trim().length > 60) {
+        return res.status(400).json({ erro: "O nome da loja deve ter entre 2 e 60 caracteres" })
+      }
+      dadosPermitidos.nome = req.body.nome.trim()
     }
 
     if (req.files?.logo?.[0]?.path) {

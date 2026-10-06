@@ -92,8 +92,8 @@ function EditarLoja({ loja, token, linkLoja }) {
         </div>
 
         <div style={{ background: "#fff", border: "1px solid #e5ece7", borderRadius: 16, padding: 22, display: "grid", gap: 17 }}>
-          <label style={campo}>Nome da loja
-            <input className="admin-input" value={nome} onChange={e => setNome(e.target.value)} maxLength={80} placeholder="Ex.: Minha Loja" />
+          <label style={campo} htmlFor="nome-loja">Nome da loja
+            <input id="nome-loja" className="admin-input" value={nome} onChange={e => setNome(e.target.value)} minLength={2} maxLength={60} required placeholder="Ex.: Minha Loja" />
           </label>
           <label style={campo}>WhatsApp para receber pedidos
             <input className="admin-input" type="tel" inputMode="tel" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="(11) 99999-9999" />
