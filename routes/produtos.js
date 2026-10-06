@@ -67,7 +67,7 @@ router.get('/:slug', async (req, res) => {
 
     const produtos = await Produto.find({
       lojaId: loja._id
-    })
+    }).select("-lojaId -__v")
 
     res.json(produtos)
 

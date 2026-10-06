@@ -46,7 +46,7 @@ function isEscura(hex) {
 }
 
 export function gerarPaleta(hex = "#22c55e") {
-  if (!hex || !hex.startsWith('#') || hex.length < 7) hex = "#22c55e"
+  if (typeof hex !== "string" || !/^#[\da-f]{6}$/i.test(hex)) hex = "#22c55e"
 
   const { h, s, l } = hexParaHSL(hex)
 

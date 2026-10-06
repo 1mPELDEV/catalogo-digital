@@ -36,9 +36,8 @@ router.get("/", verificaToken, async (req, res) => {
 // GET público — visitante vendo o catálogo por slug
 router.get("/:slug", async (req, res) => {
   try {
-    console.log("Buscando slug:", req.params.slug)
     const loja = await Loja.findOne({ slug: req.params.slug })
-    console.log("Loja encontrada:", loja)
+      .select("nome logo banner slug tema contato features")
 
     if (!loja) {
       return res.status(404).json({ erro: "Loja não encontrada" })
@@ -46,7 +45,7 @@ router.get("/:slug", async (req, res) => {
 
     res.json(loja)
   } catch (err) {
-    console.log("ERRO:", err.message)
+    console.error("Erro ao buscar loja pública:", err)
     res.status(500).json({ erro: "Erro ao buscar loja" })
   }
 })
@@ -75,6 +74,9 @@ router.put("/", verificaToken, upload.fields([{ name: "logo", maxCount: 1 }, { n
 
     const corPrimaria = req.body.tema?.corPrimaria ?? req.body.corPrimaria
     if (corPrimaria !== undefined) {
+      if (typeof corPrimaria !== "string" || !/^#[\da-f]{6}$/i.test(corPrimaria)) {
+        return res.status(400).json({ erro: "Informe uma cor hexadecimal válida" })
+      }
       dadosPermitidos["tema.corPrimaria"] = corPrimaria
     }
 

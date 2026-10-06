@@ -9,6 +9,7 @@ function contarItensCarrinho(slug) {
     const itens = JSON.parse(localStorage.getItem(`carrinho-${slug}`) || "[]")
     return Array.isArray(itens) ? itens.length : 0
   } catch {
+    localStorage.removeItem(`carrinho-${slug}`)
     return 0
   }
 }

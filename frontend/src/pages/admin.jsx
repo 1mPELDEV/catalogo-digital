@@ -158,6 +158,15 @@ function Admin() {
 
   const handleFile = (file) => {
     if (!file) return
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast.error("Use uma imagem JPEG, PNG ou WebP.")
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem pode ter no máximo 5 MB.")
+      return
+    }
+    if (imagemPreview.startsWith("blob:")) URL.revokeObjectURL(imagemPreview)
     setImagemFile(file)
     setImagemPreview(URL.createObjectURL(file))
   }
@@ -295,7 +304,7 @@ function Admin() {
 
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   ref={fileInputRef}
                   style={{ display: "none" }}
                   onChange={e => handleFile(e.target.files[0])}

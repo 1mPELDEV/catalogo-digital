@@ -8,19 +8,33 @@ import { useParams } from "react-router-dom"
 import { useLoja } from "../hooks/useLoja"
 import { ShoppingBag, Trash2, Plus, Minus, MessageCircle, X, ShoppingCart } from "lucide-react"
 
+function lerCarrinho(chave) {
+  try {
+    const valorSalvo = JSON.parse(localStorage.getItem(chave) || "[]")
+    return Array.isArray(valorSalvo) ? valorSalvo : []
+  } catch {
+    localStorage.removeItem(chave)
+    return []
+  }
+}
+
 function Pedido() {
   const { slug } = useParams()
+  return <PedidoConteudo key={slug} slug={slug} />
+}
+
+function PedidoConteudo({ slug }) {
   const chaveLocalStorage = `carrinho-${slug}`
   const chaveNome = `nomeCliente-${slug}`
   const chaveEndereco = `endereco-${slug}`
 
-  const [lista, setLista] = useState([])
+  const [lista, setLista] = useState(() => lerCarrinho(chaveLocalStorage))
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false)
   const [produtoSelecionado, setProdutoSelecionado] = useState("")
   const [acaoConfirmacao, setAcaoConfirmacao] = useState(null)
-  const [nomeCliente, setNomeCliente] = useState("")
-  const [endereco, setEndereco] = useState("")
+  const [nomeCliente, setNomeCliente] = useState(() => localStorage.getItem(chaveNome) || "")
+  const [endereco, setEndereco] = useState(() => localStorage.getItem(chaveEndereco) || "")
 
   const loja = useLoja(slug)
 
@@ -30,19 +44,9 @@ function Pedido() {
   )
 
   useEffect(() => {
-    const carrinhoSalvo = JSON.parse(localStorage.getItem(chaveLocalStorage)) || []
-    setLista(carrinhoSalvo)
-  }, [slug])
-
-  useEffect(() => {
-    setNomeCliente(localStorage.getItem(chaveNome) || "")
-    setEndereco(localStorage.getItem(chaveEndereco) || "")
-  }, [slug])
-
-  useEffect(() => {
     localStorage.setItem(chaveNome, nomeCliente)
     localStorage.setItem(chaveEndereco, endereco)
-  }, [nomeCliente, endereco])
+  }, [chaveEndereco, chaveNome, nomeCliente, endereco])
 
   const itensAgrupados = useMemo(() => {
     return Object.values(
@@ -54,7 +58,7 @@ function Pedido() {
     )
   }, [lista])
 
-  const total = itensAgrupados.reduce((acc, item) => acc + item.precoFinal * item.quantidade, 0)
+  const total = itensAgrupados.reduce((acc, item) => acc + (item.precoFinal ?? item.preco) * item.quantidade, 0)
 
   const removeItem = (id) => {
     const novaLista = lista.filter(p => p._id !== id)
@@ -100,7 +104,7 @@ function Pedido() {
     mensagem += `👤 Nome: ${nomeCliente}\n`
     mensagem += `📍 Endereço: ${endereco}\n\n`
     itensAgrupados.forEach(item => {
-      mensagem += `• ${item.nome} x${item.quantidade} - R$ ${formatarPreco(item.precoFinal * item.quantidade)}\n`
+      mensagem += `• ${item.nome} x${item.quantidade} - ${formatarPreco((item.precoFinal ?? item.preco) * item.quantidade)}\n`
     })
     mensagem += `\n💰 Total: R$ ${formatarPreco(total)}`
 
@@ -239,13 +243,15 @@ function Pedido() {
                 <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0f0f0f", marginBottom: 2 }}>Quase lá! 😄</h2>
                 <p style={{ fontSize: 13, color: "#888" }}>Preencha seus dados para finalizar</p>
               </div>
-              <button onClick={() => setMostrarFormulario(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", padding: 4 }}>
+              <button type="button" aria-label="Fechar formulário do pedido" onClick={() => setMostrarFormulario(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", padding: 4 }}>
                 <X size={18} />
               </button>
             </div>
 
             <input
               className="pedido-input"
+              aria-label="Seu nome"
+              autoComplete="name"
               type="text"
               placeholder="Seu nome"
               value={nomeCliente}
@@ -255,6 +261,8 @@ function Pedido() {
 
             <input
               className="pedido-input"
+              aria-label="Seu endereço"
+              autoComplete="street-address"
               type="text"
               placeholder="Seu endereço"
               value={endereco}

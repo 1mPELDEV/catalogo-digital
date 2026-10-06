@@ -57,9 +57,16 @@ function Master() {
   }
 
   useEffect(() => {
-    buscarLojas()
-    buscarInteresses()
-  }, [])
+    let ativo = true
+    const cabecalhos = { Authorization: `Bearer ${token}` }
+    axios.get(`${API_URL}/master/lojas`, { headers: cabecalhos })
+      .then(res => { if (ativo) setLojas(res.data) })
+      .catch(err => console.error("Erro ao carregar lojas:", err))
+    axios.get(`${API_URL}/master/interesses`, { headers: cabecalhos })
+      .then(res => { if (ativo) setInteresses(res.data) })
+      .catch(err => console.error("Erro ao carregar interessados:", err))
+    return () => { ativo = false }
+  }, [token])
 
   async function confirmarPagamento(id) {
     try {

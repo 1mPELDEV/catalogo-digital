@@ -59,7 +59,13 @@ function ProdutosGrid({ slug, loja }) {
   useEffect(() => {
     list()
     buscarCategorias()
-    const pedidoSalvo = JSON.parse(localStorage.getItem(chaveLocalStorage)) || []
+    let pedidoSalvo = []
+    try {
+      const valorSalvo = JSON.parse(localStorage.getItem(chaveLocalStorage) || "[]")
+      if (Array.isArray(valorSalvo)) pedidoSalvo = valorSalvo
+    } catch {
+      localStorage.removeItem(chaveLocalStorage)
+    }
     setLista(pedidoSalvo)
   }, [slug, list, buscarCategorias, chaveLocalStorage])
 
@@ -192,7 +198,8 @@ function ProdutosGrid({ slug, loja }) {
         {!carregando && !erro && produtosOrdenados.length === 0 && (
             <div style={{ textAlign: "center", padding: "64px 0", color: "#aaa" }}>
               <Search size={36} style={{ marginBottom: 12, opacity: 0.3 }} />
-              <p style={{ fontSize: 15 }}>Nenhum produto encontrado.</p>
+              <p style={{ fontSize: 15 }}>{busca || categoriaSelecionada ? "Nenhum produto corresponde à sua busca." : "Esta loja ainda não cadastrou produtos."}</p>
+              {(busca || categoriaSelecionada) && <button type="button" onClick={() => { setBusca(""); setCategoriaSelecionada("") }} className="mt-3 text-sm font-semibold underline" style={{ color: paleta.primaria }}>Limpar filtros</button>}
             </div>
           )}
 
@@ -216,7 +223,7 @@ function ProdutosGrid({ slug, loja }) {
                       tabIndex={0}
                       role="button"
                       aria-label={`Ver detalhes de ${produto.nome}`}
-                      style={{ width: "100%", height: 180, objectFit: "cover", cursor: "pointer" }}
+                      style={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", display: "block", cursor: "pointer" }}
                       onError={e => {
                         e.target.onerror = null
                         e.target.src = imgFallback

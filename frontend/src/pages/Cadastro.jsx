@@ -28,6 +28,15 @@ function Cadastro() {
 
   const selecionarImagem = (arquivo, tipo) => {
     if (!arquivo) return
+    if (!["image/jpeg", "image/png", "image/webp"].includes(arquivo.type)) {
+      setErro("Use uma imagem JPEG, PNG ou WebP.")
+      return
+    }
+    if (arquivo.size > 5 * 1024 * 1024) {
+      setErro("Cada imagem pode ter no máximo 5 MB.")
+      return
+    }
+    setErro("")
     const url = URL.createObjectURL(arquivo)
     if (tipo === "logo") {
       setLogo(arquivo)
@@ -56,6 +65,8 @@ function Cadastro() {
     try {
       const res = await axios.post(`${API_URL}/auth/register`, formData)
       localStorage.setItem("token", res.data.token)
+      localStorage.setItem("role", "lojista")
+      localStorage.setItem("slugLoja", res.data.slug || "")
       window.dispatchEvent(new Event("storage"))
       navigate("/welcome")
     } catch (err) {
@@ -124,7 +135,7 @@ function Cadastro() {
                   <label htmlFor="logo" className="flex h-[58px] cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 px-3 text-sm text-slate-600 transition hover:border-green-600 hover:bg-green-50/50">
                     {logoPreview ? <img src={logoPreview} alt="Prévia da logo" className="h-9 w-9 rounded-lg object-cover" /> : <ImagePlus size={19} className="text-slate-400" />}
                     <span className="truncate">{logo?.name || "Enviar logo"}</span>
-                    <input id="logo" type="file" accept="image/*" className="sr-only" onChange={e => selecionarImagem(e.target.files?.[0], "logo")} />
+                    <input id="logo" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={e => selecionarImagem(e.target.files?.[0], "logo")} />
                   </label>
                 </div>
               </div>
@@ -134,7 +145,7 @@ function Cadastro() {
                 <label htmlFor="banner" className="flex h-16 cursor-pointer items-center gap-3 overflow-hidden rounded-xl border border-dashed border-slate-300 px-4 text-sm text-slate-600 transition hover:border-green-600 hover:bg-green-50/50">
                   {bannerPreview ? <img src={bannerPreview} alt="Prévia do banner" className="h-11 w-16 rounded-lg object-cover" /> : <Upload size={18} className="text-slate-400" />}
                   <span className="truncate">{banner?.name || "Escolher imagem para o banner"}</span>
-                  <input id="banner" type="file" accept="image/*" className="sr-only" onChange={e => selecionarImagem(e.target.files?.[0], "banner")} />
+                  <input id="banner" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={e => selecionarImagem(e.target.files?.[0], "banner")} />
                 </label>
               </div>
 
