@@ -33,6 +33,8 @@ function Admin() {
   const [abaAtiva, setAbaAtiva] = useState("inicio")
 
   const fileInputRef = useRef(null)
+  const formularioProdutoRef = useRef(null)
+  const nomeProdutoRef = useRef(null)
   const navigate = useNavigate()
   const token = localStorage.getItem("token")
   const loja = useLoja()
@@ -40,6 +42,15 @@ function Admin() {
   const produtosEmPromocao = produtos.filter(produto => produto.promocao?.ativa).length
 
   useEffect(() => { if (!token) navigate("/") }, [navigate, token])
+
+  useEffect(() => {
+    if (!mostrarForm) return
+    const frame = requestAnimationFrame(() => {
+      formularioProdutoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+      nomeProdutoRef.current?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [mostrarForm])
 
   const buscarProdutos = useCallback(async () => {
     try {
@@ -284,14 +295,14 @@ function Admin() {
 
           {/* FORMULÁRIO */}
           {mostrarForm && (
-            <div className="card" style={{ padding: 28, marginBottom: 32 }}>
+            <div ref={formularioProdutoRef} className="card" style={{ padding: 28, marginBottom: 32, scrollMarginTop: 24 }}>
               <h2 style={{ fontSize: 17, fontWeight: 600, marginBottom: 24, color: "#0f0f0f" }}>
                 {editandoId ? "Editar produto" : "Novo produto"}
               </h2>
 
               {/* LINHA 1 — nome e preço */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
-                <input className="admin-input" placeholder="Nome do produto" value={nome} onChange={e => setNome(e.target.value)} />
+                <input ref={nomeProdutoRef} className="admin-input" placeholder="Nome do produto" value={nome} onChange={e => setNome(e.target.value)} />
                 <input className="admin-input" type="number" placeholder="Preço (R$)" value={preco ?? ""} onChange={e => setPreco(e.target.value)} />
               </div>
 

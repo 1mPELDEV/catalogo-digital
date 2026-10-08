@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const Loja = require('../models/Loja')
 const Admin = require('../models/Admin')
+const bcrypt = require('bcrypt')
 const { verificaToken } = require('../middlewares/authMiddleware')
 const upload = require('../config/multer')
 
@@ -27,7 +28,8 @@ router.get("/", verificaToken, async (req, res) => {
       return res.status(404).json({ erro: "Loja não encontrada para este administrador" })
     }
 
-    res.json(loja)
+    const admin = await Admin.findById(adminId).select("email")
+    res.json({ ...loja.toObject(), email: admin?.email || "" })
   } catch (err) {
     res.status(500).json({ erro: "Erro ao buscar loja" })
   }
@@ -61,6 +63,34 @@ router.put("/", verificaToken, upload.fields([{ name: "logo", maxCount: 1 }, { n
         return res.status(400).json({ erro: "O nome da loja deve ter entre 2 e 60 caracteres" })
       }
       dadosPermitidos.nome = req.body.nome.trim()
+    }
+
+    let adminAtualizado = null
+    const admin = await Admin.findById(req.admin.id)
+    if (!admin) return res.status(404).json({ erro: "Administrador não encontrado" })
+
+    if (req.body.email !== undefined) {
+      const email = String(req.body.email).trim().toLowerCase()
+      if (!/^\S+@\S+\.\S+$/.test(email) || email.length > 254) {
+        return res.status(400).json({ erro: "Informe um e-mail válido" })
+      }
+      const existente = await Admin.findOne({ email, _id: { $ne: admin._id } }).select("_id")
+      if (existente) return res.status(409).json({ erro: "Este e-mail já está em uso" })
+      admin.email = email
+      adminAtualizado = true
+    }
+
+    if (req.body.senha !== undefined && String(req.body.senha).length > 0) {
+      const senhaAtual = String(req.body.senhaAtual || "")
+      if (!(await bcrypt.compare(senhaAtual, admin.senha))) {
+        return res.status(400).json({ erro: "A senha atual está incorreta" })
+      }
+      const novaSenha = String(req.body.senha)
+      if (novaSenha.length < 6 || novaSenha.length > 128) {
+        return res.status(400).json({ erro: "A nova senha deve ter entre 6 e 128 caracteres" })
+      }
+      admin.senha = await bcrypt.hash(novaSenha, 10)
+      adminAtualizado = true
     }
 
     if (req.files?.logo?.[0]?.path) {
@@ -115,7 +145,8 @@ router.put("/", verificaToken, upload.fields([{ name: "logo", maxCount: 1 }, { n
       })
     }
 
-    res.json(loja)
+    if (adminAtualizado) await admin.save()
+    res.json({ ...loja.toObject(), email: admin.email })
 
   } catch (err) {
     console.error(err)

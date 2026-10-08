@@ -6,6 +6,9 @@ const API_URL = import.meta.env.VITE_API_URL
 
 function EditarLoja({ loja, token, linkLoja }) {
   const [nome, setNome] = useState(loja?.nome || "")
+  const [email, setEmail] = useState(loja?.email || "")
+  const [senhaAtual, setSenhaAtual] = useState("")
+  const [novaSenha, setNovaSenha] = useState("")
   const [whatsapp, setWhatsapp] = useState(loja?.contato?.whatsapp || "")
   const [corPrimaria, setCorPrimaria] = useState(loja?.tema?.corPrimaria || "#16a34a")
   const [logo, setLogo] = useState(null)
@@ -39,6 +42,11 @@ function EditarLoja({ loja, token, linkLoja }) {
     const numeroCompleto = numero.startsWith("55") ? numero : `55${numero}`
     const dados = new FormData()
     dados.append("nome", nome.trim())
+    dados.append("email", email.trim())
+    if (novaSenha) {
+      dados.append("senhaAtual", senhaAtual)
+      dados.append("senha", novaSenha)
+    }
     dados.append("whatsapp", numeroCompleto)
     dados.append("corPrimaria", corPrimaria)
     if (logo) dados.append("logo", logo)
@@ -55,6 +63,8 @@ function EditarLoja({ loja, token, linkLoja }) {
       setBanner(null)
       setLogoPreview("")
       setBannerPreview("")
+      setSenhaAtual("")
+      setNovaSenha("")
       setMensagem("Alterações salvas com sucesso.")
     } catch (error) {
       setMensagem(error.response?.data?.erro || "Não foi possível salvar as alterações.")
@@ -82,7 +92,7 @@ function EditarLoja({ loja, token, linkLoja }) {
       <header style={{ marginBottom: 22 }}>
         <p style={{ margin: "0 0 7px", color: "#15803d", fontSize: 12, fontWeight: 700, letterSpacing: ".1em" }}>PERSONALIZAÇÃO</p>
         <h1 style={{ margin: "0 0 6px", color: "#10261b", fontSize: 28 }}>Editar minha loja</h1>
-        <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>Atualize a identidade visual e os dados de contato do seu catálogo.</p>
+        <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>Atualize os dados de acesso, contato e identidade visual do seu catálogo.</p>
       </header>
 
       <form onSubmit={salvar} style={{ display: "grid", gap: 18 }}>
@@ -97,6 +107,15 @@ function EditarLoja({ loja, token, linkLoja }) {
           </label>
           <label style={campo}>WhatsApp para receber pedidos
             <input className="admin-input" type="tel" inputMode="tel" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="(11) 99999-9999" />
+          </label>
+          <label style={campo}>E-mail de acesso
+            <input className="admin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="voce@exemplo.com" />
+          </label>
+          <label style={campo}>Senha atual <span style={{ fontWeight: 400, color: "#64748b" }}>Obrigatória para trocar a senha</span>
+            <input className="admin-input" type="password" value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} autoComplete="current-password" placeholder="Digite sua senha atual" />
+          </label>
+          <label style={campo}>Nova senha <span style={{ fontWeight: 400, color: "#64748b" }}>Deixe em branco para manter a senha atual</span>
+            <input className="admin-input" type="password" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} minLength={6} maxLength={128} autoComplete="new-password" placeholder="Mínimo de 6 caracteres" />
           </label>
           <label style={{ ...campo, gridTemplateColumns: "1fr auto", alignItems: "center" }}>Cor principal da loja
             <input aria-label="Cor principal" type="color" value={corPrimaria} onChange={e => setCorPrimaria(e.target.value)} style={{ width: 48, height: 38, padding: 2, border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff", cursor: "pointer" }} />
