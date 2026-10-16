@@ -39,7 +39,7 @@ router.get("/", verificaToken, async (req, res) => {
 router.get("/:slug", async (req, res) => {
   try {
     const loja = await Loja.findOne({ slug: req.params.slug })
-      .select("nome logo banner slug tema contato features")
+      .select("nome logo banner slug tema contato features checkout")
 
     if (!loja) {
       return res.status(404).json({ erro: "Loja não encontrada" })
@@ -116,6 +116,21 @@ router.put("/", verificaToken, upload.fields([{ name: "logo", maxCount: 1 }, { n
     const whatsapp = req.body.contato?.whatsapp ?? req.body.whatsapp
     if (whatsapp !== undefined) {
       dadosPermitidos["contato.whatsapp"] = whatsapp
+    }
+
+    if (req.body.checkout !== undefined) {
+      let checkout
+      try {
+        checkout = typeof req.body.checkout === "string" ? JSON.parse(req.body.checkout) : req.body.checkout
+      } catch {
+        return res.status(400).json({ erro: "Configuração de checkout inválida" })
+      }
+      if (!checkout || typeof checkout !== "object" || !Array.isArray(checkout.pagamentos) || checkout.pagamentos.some(item => !["Pix", "Dinheiro", "Cartão de crédito", "Cartão de débito"].includes(item))) {
+        return res.status(400).json({ erro: "Confira as opções de pagamento" })
+      }
+      dadosPermitidos.checkout = {
+        pagamentos: checkout.pagamentos
+      }
     }
 
     let lojaAtual = await Loja.findOne({ adminId: req.admin.id }).select("_id")

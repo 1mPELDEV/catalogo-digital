@@ -24,6 +24,10 @@ const LojaSchema = new mongoose.Schema({
     whatsapp: String
   },
 
+  checkout: {
+    pagamentos: { type: [String], default: ["Pix", "Dinheiro"] }
+  },
+
   planoInicio: Date,
   planoExpiraEm: Date,
 

@@ -6,7 +6,7 @@ import formatarPreco from '../utils/formatarpreco'
 import { gerarPaleta } from '../utils/paleta'
 import { useParams } from "react-router-dom"
 import { useLoja } from "../hooks/useLoja"
-import { ShoppingBag, Trash2, Plus, Minus, MessageCircle, X, ShoppingCart } from "lucide-react"
+import { ShoppingBag, Trash2, Plus, Minus, MessageCircle, X, ShoppingCart, MapPin, ArrowLeft, Check } from "lucide-react"
 
 function lerCarrinho(chave) {
   try {
@@ -34,7 +34,18 @@ function PedidoConteudo({ slug }) {
   const [produtoSelecionado, setProdutoSelecionado] = useState("")
   const [acaoConfirmacao, setAcaoConfirmacao] = useState(null)
   const [nomeCliente, setNomeCliente] = useState(() => localStorage.getItem(chaveNome) || "")
-  const [endereco, setEndereco] = useState(() => localStorage.getItem(chaveEndereco) || "")
+  const [telefone, setTelefone] = useState("")
+  const [cep, setCep] = useState("")
+  const [rua, setRua] = useState("")
+  const [numeroEndereco, setNumeroEndereco] = useState("")
+  const [complemento, setComplemento] = useState("")
+  const [bairro, setBairro] = useState("")
+  const [cidade, setCidade] = useState("")
+  const [uf, setUf] = useState("")
+  const [modalidade, setModalidade] = useState("")
+  const [pagamento, setPagamento] = useState("")
+  const [etapaResumo, setEtapaResumo] = useState(false)
+  const [consultandoCep, setConsultandoCep] = useState(false)
 
   const loja = useLoja(slug)
 
@@ -43,10 +54,31 @@ function PedidoConteudo({ slug }) {
     [loja?.tema?.corPrimaria]
   )
 
+  const checkout = loja?.checkout || { pagamentos: ["Pix", "Dinheiro"] }
+  const opcoesEntrega = ["Entrega", "Retirada"]
+  const pagamentosDisponiveis = checkout.pagamentos?.length ? checkout.pagamentos : ["Pix", "Dinheiro"]
+
+  useEffect(() => { localStorage.setItem(chaveNome, nomeCliente) }, [chaveNome, nomeCliente])
+
   useEffect(() => {
-    localStorage.setItem(chaveNome, nomeCliente)
-    localStorage.setItem(chaveEndereco, endereco)
-  }, [chaveEndereco, chaveNome, nomeCliente, endereco])
+    if (modalidade === "Entrega" && cep.replace(/\D/g, "").length === 8) {
+      let ativa = true
+      setConsultandoCep(true)
+      fetch(`https://viacep.com.br/ws/${cep.replace(/\D/g, "")}/json/`)
+        .then(res => res.json())
+        .then(dados => {
+          if (!ativa) return
+          if (dados.erro) return toast.warning("CEP não encontrado. Confira o número ou preencha o endereço manualmente.")
+          setRua(dados.logradouro || "")
+          setBairro(dados.bairro || "")
+          setCidade(dados.localidade || "")
+          setUf(dados.uf || "")
+        })
+        .catch(() => { if (ativa) toast.error("Não foi possível consultar o CEP. Preencha o endereço manualmente.") })
+        .finally(() => { if (ativa) setConsultandoCep(false) })
+      return () => { ativa = false }
+    }
+  }, [cep, modalidade])
 
   const itensAgrupados = useMemo(() => {
     return Object.values(
@@ -95,23 +127,29 @@ function PedidoConteudo({ slug }) {
   const finalizarPedido = () => {
     if (lista.length === 0) return toast.warning("Seu pedido está vazio!")
     if (!nomeCliente.trim()) return toast.warning("Digite o seu nome!")
-    if (!endereco.trim()) return toast.warning("Digite o seu endereço!")
+    if (!telefone.trim()) return toast.warning("Informe um telefone para contato.")
+    if (!modalidade) return toast.warning("Escolha entrega ou retirada.")
+    if (modalidade === "Entrega" && (!rua.trim() || !numeroEndereco.trim() || !cidade.trim())) return toast.warning("Complete o endereço de entrega.")
+    if (!pagamento) return toast.warning("Escolha uma forma de pagamento.")
+    if (!etapaResumo) { setEtapaResumo(true); return }
 
     const numero = loja?.contato?.whatsapp
     if (!numero) return toast.error("Esta loja ainda não configurou o WhatsApp!")
 
-    let mensagem = "🛒 *Novo Pedido* \n\n"
-    mensagem += `👤 Nome: ${nomeCliente}\n`
-    mensagem += `📍 Endereço: ${endereco}\n\n`
+    const enderecoCompleto = [rua, numeroEndereco, complemento, bairro, [cidade, uf].filter(Boolean).join(" - "), cep && `CEP ${cep}`].filter(Boolean).join(", ")
+    let mensagem = `Olá, ${loja?.nome || "tudo bem"}! Gostaria de fazer um pedido.\n\n`
+    mensagem += `*DADOS DO CLIENTE*\nNome: ${nomeCliente.trim()}\nTelefone: ${telefone.trim()}\n`
+    mensagem += `*${modalidade.toUpperCase()}*${modalidade === "Entrega" ? `\nEndereço: ${enderecoCompleto}` : ""}\n`
+    mensagem += `Pagamento: ${pagamento}\n\n*ITENS DO PEDIDO*\n`
     itensAgrupados.forEach(item => {
       mensagem += `• ${item.nome} x${item.quantidade} - ${formatarPreco((item.precoFinal ?? item.preco) * item.quantidade)}\n`
     })
-    mensagem += `\n💰 Total: R$ ${formatarPreco(total)}`
+    mensagem += `\n*Total: ${formatarPreco(total)}*\n\nAguardo a confirmação. Obrigado(a)!`
 
     window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, "_blank")
     setMostrarFormulario(false)
     limparCarrinho()
-    toast.success("Pedido enviado!")
+    toast.success("Pedido preparado. Conclua o envio na conversa do WhatsApp.")
   }
 
   const confirmarAcao = () => {
@@ -236,47 +274,46 @@ function PedidoConteudo({ slug }) {
       {/* MODAL FINALIZAR */}
       {mostrarFormulario && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
-          <div style={{ background: "#fff", borderRadius: 20, padding: 28, width: "100%", maxWidth: 440, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: 26, width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div>
-                <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0f0f0f", marginBottom: 2 }}>Quase lá! 😄</h2>
-                <p style={{ fontSize: 13, color: "#888" }}>Preencha seus dados para finalizar</p>
+                <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0f0f0f", marginBottom: 2 }}>{etapaResumo ? "Revise seu pedido" : "Dados para o pedido"}</h2>
+                <p style={{ fontSize: 13, color: "#888" }}>{etapaResumo ? "Confira tudo antes de enviar pelo WhatsApp." : "Preencha seus dados para a loja confirmar o pedido."}</p>
               </div>
               <button type="button" aria-label="Fechar formulário do pedido" onClick={() => setMostrarFormulario(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", padding: 4 }}>
                 <X size={18} />
               </button>
             </div>
 
-            <input
-              className="pedido-input"
-              aria-label="Seu nome"
-              autoComplete="name"
-              type="text"
-              placeholder="Seu nome"
-              value={nomeCliente}
-              onChange={e => setNomeCliente(e.target.value)}
-              style={{ marginBottom: 10 }}
-            />
-
-            <input
-              className="pedido-input"
-              aria-label="Seu endereço"
-              autoComplete="street-address"
-              type="text"
-              placeholder="Seu endereço"
-              value={endereco}
-              onChange={e => setEndereco(e.target.value)}
-              style={{ marginBottom: 20 }}
-            />
+            {etapaResumo ? <div style={{ display: "grid", gap: 14, marginBottom: 20 }}>
+              <section style={{ background: "#f8faf9", borderRadius: 12, padding: 15, fontSize: 13, lineHeight: 1.8, color: "#475569" }}><strong style={{ color: "#10261b" }}>Cliente</strong><br />{nomeCliente} · {telefone}<br /><strong style={{ color: "#10261b" }}>{modalidade}</strong>{modalidade === "Entrega" && <><br />{[rua, numeroEndereco, complemento, bairro, [cidade, uf].filter(Boolean).join(" - "), cep && `CEP ${cep}`].filter(Boolean).join(", ")}</>}<br /><strong style={{ color: "#10261b" }}>Pagamento:</strong> {pagamento}</section>
+              <section style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 15 }}><strong style={{ fontSize: 13, color: "#10261b" }}>Itens</strong>{itensAgrupados.map(item => <div key={item._id} style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 8, fontSize: 13, color: "#475569" }}><span>{item.quantidade}× {item.nome}</span><span>{formatarPreco((item.precoFinal ?? item.preco) * item.quantidade)}</span></div>)}<div style={{ borderTop: "1px solid #e2e8f0", marginTop: 12, paddingTop: 12, display: "flex", justifyContent: "space-between", fontWeight: 700 }}><span>Total</span><span>{formatarPreco(total)}</span></div></section>
+            </div> : <div style={{ display: "grid", gap: 12, marginBottom: 20 }}>
+              <label style={{ display: "grid", gap: 6, fontSize: 12, color: "#475569", fontWeight: 600 }}>Nome completo<input className="pedido-input" autoComplete="name" placeholder="Ex.: Maria da Silva" value={nomeCliente} onChange={e => setNomeCliente(e.target.value)} /></label>
+              <label style={{ display: "grid", gap: 6, fontSize: 12, color: "#475569", fontWeight: 600 }}>Telefone / WhatsApp<input className="pedido-input" autoComplete="tel" type="tel" inputMode="tel" placeholder="(11) 99999-9999" value={telefone} onChange={e => setTelefone(e.target.value)} /></label>
+              {opcoesEntrega.length > 0 && <fieldset style={{ border: 0, padding: 0, margin: 0 }}><legend style={{ marginBottom: 7, fontSize: 12, color: "#475569", fontWeight: 600 }}>Como prefere receber?</legend><div style={{ display: "flex", gap: 8 }}>{opcoesEntrega.map(opcao => <button key={opcao} type="button" onClick={() => setModalidade(opcao)} style={{ flex: 1, padding: 10, borderRadius: 10, border: `1px solid ${modalidade === opcao ? paleta.primaria : "#e2e8f0"}`, background: modalidade === opcao ? paleta.fundo : "white", color: "#334155", cursor: "pointer", fontWeight: 600 }}>{opcao}</button>)}</div></fieldset>}
+              {modalidade === "Entrega" && <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10 }}>
+                <label style={{ display: "grid", gap: 6, fontSize: 12, color: "#475569", fontWeight: 600 }}>CEP<div style={{ position: "relative" }}><input className="pedido-input" autoComplete="postal-code" inputMode="numeric" placeholder="00000-000" maxLength={9} value={cep} onChange={e => setCep(e.target.value.replace(/[^\d-]/g, "").slice(0, 9))} />{consultandoCep && <span style={{ position: "absolute", right: 10, top: 12, fontSize: 10 }}>Buscando…</span>}</div></label>
+                <label style={{ display: "grid", gap: 6, fontSize: 12, color: "#475569", fontWeight: 600 }}>Rua / avenida<input className="pedido-input" autoComplete="address-line1" placeholder="Rua" value={rua} onChange={e => setRua(e.target.value)} /></label>
+                <label style={{ display: "grid", gap: 6, fontSize: 12, color: "#475569", fontWeight: 600 }}>Número<input className="pedido-input" placeholder="Nº" value={numeroEndereco} onChange={e => setNumeroEndereco(e.target.value)} /></label>
+                <label style={{ display: "grid", gap: 6, fontSize: 12, color: "#475569", fontWeight: 600 }}>Complemento (opcional)<input className="pedido-input" placeholder="Apto, bloco…" value={complemento} onChange={e => setComplemento(e.target.value)} /></label>
+                <label style={{ display: "grid", gap: 6, fontSize: 12, color: "#475569", fontWeight: 600 }}>Bairro<input className="pedido-input" autoComplete="address-level3" placeholder="Bairro" value={bairro} onChange={e => setBairro(e.target.value)} /></label>
+                <label style={{ display: "grid", gap: 6, fontSize: 12, color: "#475569", fontWeight: 600 }}>Cidade<input className="pedido-input" autoComplete="address-level2" placeholder="Cidade" value={cidade} onChange={e => setCidade(e.target.value)} /></label>
+                <label style={{ display: "grid", gap: 6, fontSize: 12, color: "#475569", fontWeight: 600 }}>UF<input className="pedido-input" autoComplete="address-level1" placeholder="UF" maxLength={2} value={uf} onChange={e => setUf(e.target.value.toUpperCase())} /></label>
+                <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 6, color: "#64748b", fontSize: 11 }}><MapPin size={13} />Digite o CEP para preencher o endereço automaticamente.</div>
+              </div>}
+              <label style={{ display: "grid", gap: 6, fontSize: 12, color: "#475569", fontWeight: 600 }}>Forma de pagamento<select className="pedido-input" value={pagamento} onChange={e => setPagamento(e.target.value)}><option value="">Selecione uma opção</option>{pagamentosDisponiveis.map(opcao => <option key={opcao} value={opcao}>{opcao}</option>)}</select></label>
+            </div>}
 
             <div style={{ display: "flex", gap: 10 }}>
               <button
                 onClick={finalizarPedido}
                 style={{ flex: 1, padding: "12px", borderRadius: 10, background: "#25d366", color: "#fff", border: "none", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: "inherit" }}
               >
-                <MessageCircle size={16} /> Enviar WhatsApp
+                {etapaResumo ? <><MessageCircle size={16} /> Confirmar e abrir WhatsApp</> : <>Continuar <Check size={16} /></>}
               </button>
+              {etapaResumo && <button type="button" onClick={() => setEtapaResumo(false)} style={{ padding: "12px 14px", borderRadius: 10, background: "#f4f4f5", color: "#555", border: "none", fontSize: 14, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}><ArrowLeft size={14} />Editar</button>}
               <button
                 onClick={() => setMostrarFormulario(false)}
                 style={{ padding: "12px 18px", borderRadius: 10, background: "#f4f4f5", color: "#555", border: "none", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}

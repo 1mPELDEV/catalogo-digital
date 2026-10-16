@@ -10,6 +10,7 @@ function EditarLoja({ loja, token, linkLoja }) {
   const [senhaAtual, setSenhaAtual] = useState("")
   const [novaSenha, setNovaSenha] = useState("")
   const [whatsapp, setWhatsapp] = useState(loja?.contato?.whatsapp || "")
+  const [pagamentos, setPagamentos] = useState(loja?.checkout?.pagamentos || ["Pix", "Dinheiro"])
   const [corPrimaria, setCorPrimaria] = useState(loja?.tema?.corPrimaria || "#16a34a")
   const [logo, setLogo] = useState(null)
   const [banner, setBanner] = useState(null)
@@ -38,6 +39,7 @@ function EditarLoja({ loja, token, linkLoja }) {
     const numero = whatsapp.replace(/\D/g, "")
     if (!nome.trim()) return setMensagem("Informe o nome da loja.")
     if (numero.length < 10 || numero.length > 13) return setMensagem("Confira o número do WhatsApp.")
+    if (pagamentos.length === 0) return setMensagem("Selecione pelo menos uma forma de pagamento.")
 
     const numeroCompleto = numero.startsWith("55") ? numero : `55${numero}`
     const dados = new FormData()
@@ -49,6 +51,7 @@ function EditarLoja({ loja, token, linkLoja }) {
     }
     dados.append("whatsapp", numeroCompleto)
     dados.append("corPrimaria", corPrimaria)
+    dados.append("checkout", JSON.stringify({ pagamentos }))
     if (logo) dados.append("logo", logo)
     if (banner) dados.append("banner", banner)
 
@@ -120,6 +123,11 @@ function EditarLoja({ loja, token, linkLoja }) {
           <label style={{ ...campo, gridTemplateColumns: "1fr auto", alignItems: "center" }}>Cor principal da loja
             <input aria-label="Cor principal" type="color" value={corPrimaria} onChange={e => setCorPrimaria(e.target.value)} style={{ width: 48, height: 38, padding: 2, border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff", cursor: "pointer" }} />
           </label>
+        </div>
+
+        <div style={{ background: "#fff", border: "1px solid #e5ece7", borderRadius: 16, padding: 22, display: "grid", gap: 16 }}>
+          <div><h2 style={{ margin: "0 0 5px", color: "#10261b", fontSize: 17 }}>Formas de pagamento</h2><p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>Escolha as opções que seus clientes poderão selecionar no checkout.</p></div>
+          <div style={{ display: "grid", gap: 9 }}><span style={{ color: "#334155", fontSize: 13, fontWeight: 600 }}>Formas de pagamento aceitas</span><div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>{["Pix", "Dinheiro", "Cartão de crédito", "Cartão de débito"].map(opcao => <label key={opcao} style={{ display: "flex", alignItems: "center", gap: 7, color: "#475569", fontSize: 13 }}><input type="checkbox" checked={pagamentos.includes(opcao)} onChange={e => setPagamentos(lista => e.target.checked ? [...lista, opcao] : lista.filter(item => item !== opcao))} />{opcao}</label>)}</div></div>
         </div>
 
         {mensagem && <p role="status" style={{ margin: 0, padding: "12px 14px", borderRadius: 10, background: mensagem.includes("sucesso") ? "#edf8f0" : "#fff7ed", color: mensagem.includes("sucesso") ? "#166534" : "#9a3412", fontSize: 13 }}>{mensagem}</p>}

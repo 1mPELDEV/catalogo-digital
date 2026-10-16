@@ -222,7 +222,7 @@ function Admin() {
         .dropzone:hover { border-color: #aaa; background: #f4f4f4; }
         .dropzone.tem-imagem { padding: 0; border-style: solid; border-color: #e2e2e2; overflow: hidden; }
         .admin-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 22px; align-items: start; }
-        .admin-sidebar { position: sticky; top: 82px; }
+        .admin-sidebar { position: sticky; top: 82px; background: #fff; border: 1px solid #dce9df; border-radius: 18px; padding: 12px; box-shadow: 0 8px 24px rgba(16,38,27,.05); }
         .admin-nav-link { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; border-radius: 10px; background: transparent; padding: 10px 12px; color: #475569; text-decoration: none; text-align: left; font-size: 13px; font-weight: 500; cursor: pointer; }
         .admin-nav-link:hover, .admin-nav-link.active { background: #edf8f0; color: #166534; }
         @media (max-width: 850px) { .admin-layout { grid-template-columns: minmax(0, 1fr); } .admin-sidebar { position: static; } .admin-sidebar nav { display: flex; overflow-x: auto; gap: 4px; } .admin-sidebar .admin-nav-link { width: auto; white-space: nowrap; } .admin-sidebar-note { display: none; } }
@@ -231,13 +231,13 @@ function Admin() {
       <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: "#f7faf8", minHeight: "100vh" }}>
         <div className="admin-layout" style={{ maxWidth: 1380, margin: "0 auto", padding: "28px 24px" }}>
           <aside className="admin-sidebar">
-            <div style={{ marginBottom: 10, padding: "8px 12px", fontSize: 11, fontWeight: 700, color: "#94a3b8", letterSpacing: ".12em" }}>MENU DA LOJA</div>
+            <div style={{ marginBottom: 10, padding: "8px 12px 12px", borderBottom: "1px solid #edf2ee" }}><div style={{ display: "flex", alignItems: "center", gap: 9, color: "#10261b", fontSize: 15, fontWeight: 700 }}><LayoutGrid size={18} color="#15803d" /> Menu do painel</div><p style={{ margin: "5px 0 0 27px", color: "#64748b", fontSize: 11 }}>Acesse as áreas da sua loja</p></div>
             <nav aria-label="Navegação do painel">
               <button type="button" className={`admin-nav-link ${abaAtiva === "inicio" ? "active" : ""}`} onClick={() => setAbaAtiva("inicio")}><Home size={16} /> Visão geral</button>
               <button type="button" className="admin-nav-link" onClick={() => { setAbaAtiva("inicio"); setTimeout(() => document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth" }), 0) }}><Package size={16} /> Produtos</button>
               <button type="button" className="admin-nav-link" onClick={() => { setAbaAtiva("inicio"); limparForm(); setMostrarForm(true); setMostrarFormCategoria(true); setTimeout(() => document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth" }), 0) }}><LayoutGrid size={16} /> Categorias</button>
               {linkLoja && <a className="admin-nav-link" href={linkLoja} target="_blank" rel="noreferrer"><Store size={16} /> Minha loja <ExternalLink size={13} style={{ marginLeft: "auto" }} /></a>}
-              <button type="button" className={`admin-nav-link ${abaAtiva === "loja" ? "active" : ""}`} onClick={() => setAbaAtiva("loja")}><Settings size={16} /> Editar minha loja</button>
+              <button type="button" className={`admin-nav-link ${abaAtiva === "loja" ? "active" : ""}`} onClick={() => setAbaAtiva("loja")}><Settings size={16} /> Personalizar loja <ChevronRight size={14} style={{ marginLeft: "auto" }} /></button>
             </nav>
             <div className="admin-sidebar-note" style={{ marginTop: 20, border: "1px solid #e5ece7", borderRadius: 16, padding: 15, background: "#fff" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#166534", fontSize: 12, fontWeight: 600 }}><MessageCircle size={15} /> Atendimento pelo WhatsApp</div>
