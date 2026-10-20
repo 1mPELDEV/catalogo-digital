@@ -38,7 +38,7 @@ function Login() {
   }
 
   return (
-    <main className="grid min-h-[78vh] bg-[#f7faf8] lg:grid-cols-2">
+    <main className="grid min-h-screen bg-[#f7faf8] lg:grid-cols-2">
       <section className="flex items-center justify-center px-4 py-12 sm:px-8">
         <div className="w-full max-w-md">
           <Link to="/" className="mb-10 inline-flex items-center gap-2.5 text-slate-900 no-underline"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-700 text-white"><Store size={18} /></span><span className="font-semibold tracking-tight">Catálogo Digital</span></Link>

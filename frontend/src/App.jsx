@@ -25,14 +25,15 @@ function Layout() {
 
   // páginas sem navbar
   const ocultarNavbar = [
-    "/"
+    "/",
+    "/login"
   ]
 
   const mostrarNavbar =
     !ocultarNavbar.includes(
       location.pathname
     )
-  const mostrarFooter = location.pathname !== "/"
+  const mostrarFooter = !["/", "/login"].includes(location.pathname)
 
   return (
     <>
